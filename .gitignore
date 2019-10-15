@@ -1,0 +1,4 @@
+/src/hps/packet-fifo
+*.o
+*.c.i
+.*.swp
