@@ -92,7 +92,7 @@ mmio_read32(void *base, size_t offset)
 #define FIFO_IENABLE_UDF  (0x20)
 #define FIFO_IENABLE_ALL  (0x3F)
 
-struct infifo_ctx {
+struct rdfifo_ctx {
 	void *base;
 	void *csr_base;
 	size_t numbytes;
@@ -106,13 +106,13 @@ struct infifo_ctx {
 #define FIFO_OVERLONG_ERROR (-4)
 
 size_t
-infifo_ctx_size()
+rdfifo_ctx_size()
 {
-	return sizeof(struct infifo_ctx);
+	return sizeof(struct rdfifo_ctx);
 }
 
 int
-init_infifo(struct infifo_ctx *ctx, void *base, void *csr_base)
+init_rdfifo(struct rdfifo_ctx *ctx, void *base, void *csr_base)
 {
 	ctx->base = base;
 	ctx->csr_base = csr_base;
@@ -134,7 +134,7 @@ init_infifo(struct infifo_ctx *ctx, void *base, void *csr_base)
 }
 
 int
-fifo_read(struct infifo_ctx *ctx)
+fifo_read(struct rdfifo_ctx *ctx)
 {
 	uint32_t tmp, num_elems;
 	uint32_t other = 0;
@@ -235,8 +235,8 @@ main()
 	int led_mask;
 	void *h2p_lw_led_addr;
 	void *h2p_sysid_addr;
-	void *infifo_base, *infifo_csr_base, *outfifo_base;
-	struct infifo_ctx *infifo_ctx;
+	void *fifo_f2h_base, *fifo_f2h_csr_base, *fifo_h2f_base;
+	struct rdfifo_ctx *fifo_f2h_ctx;
 	uint32_t id, tmp;
 	uint8_t outbuf[2048];
 
@@ -258,18 +258,20 @@ main()
 			ALT_LWFPGASLVS_OFST + LED_PIO_BASE,HW_REGS_MASK);
 	h2p_sysid_addr = addr_offset_mask(virtual_base,
 			ALT_LWFPGASLVS_OFST + SYSID_QSYS_BASE,HW_REGS_MASK);
-	infifo_base = addr_offset_mask(virtual_base,
-			ALT_LWFPGASLVS_OFST + FIFO_1_OUT_BASE,HW_REGS_MASK);
-	infifo_csr_base = addr_offset_mask(virtual_base,
-			ALT_LWFPGASLVS_OFST + FIFO_1_IN_CSR_BASE,HW_REGS_MASK);
-	outfifo_base = addr_offset_mask(virtual_base,
-			ALT_LWFPGASLVS_OFST + FIFO_0_BASE,HW_REGS_MASK);
+	fifo_f2h_base = addr_offset_mask(virtual_base,
+			ALT_LWFPGASLVS_OFST + FIFO_F2H_OUT_OUT_BASE,
+			HW_REGS_MASK);
+	fifo_f2h_csr_base = addr_offset_mask(virtual_base,
+			ALT_LWFPGASLVS_OFST + FIFO_F2H_OUT_IN_CSR_BASE,
+			HW_REGS_MASK);
+	fifo_h2f_base = addr_offset_mask(virtual_base,
+			ALT_LWFPGASLVS_OFST + FIFO_H2F_IN_BASE,HW_REGS_MASK);
 
 	id = mmio_read32(h2p_sysid_addr, 0);
 	printf("%#010x\n", id);
 
-	infifo_ctx = malloc(infifo_ctx_size());
-	init_infifo(infifo_ctx, infifo_base, infifo_csr_base);
+	fifo_f2h_ctx = malloc(rdfifo_ctx_size());
+	init_rdfifo(fifo_f2h_ctx, fifo_f2h_base, fifo_f2h_csr_base);
 
 	tmp = 0x12345678;
 	for (size_t i = 0; i < 1024; i += 4) {
@@ -277,14 +279,14 @@ main()
 		tmp += 0x1;
 	}
 
-	fifo_write(outfifo_base, outbuf, 1021);
-	while((res = fifo_read(infifo_ctx)) == FIFO_NEED_MORE) {}
+	fifo_write(fifo_h2f_base, outbuf, 1021);
+	while((res = fifo_read(fifo_f2h_ctx)) == FIFO_NEED_MORE) {}
 	if (res == 0) {
 		uint32_t *p;
 		printf("Got packet with size %d bytes:\n",
-				infifo_ctx->numbytes);
-		hexdump(infifo_ctx->buf, infifo_ctx->numbytes);
-		p = &infifo_ctx->buf[((infifo_ctx->numbytes-1) >> 2)];
+				fifo_f2h_ctx->numbytes);
+		hexdump(fifo_f2h_ctx->buf, fifo_f2h_ctx->numbytes);
+		p = &fifo_f2h_ctx->buf[((fifo_f2h_ctx->numbytes-1) >> 2)];
 		printf("Last word: *%p = %#010x\n", (void *) p, *p);
 	}
 
