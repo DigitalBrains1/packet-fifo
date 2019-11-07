@@ -8,7 +8,12 @@ CC = $(CROSS_COMPILE)gcc
 OBJDUMP = $(CROSS_COMPILE)objdump
 ARCH= arm
 
-all: packet-fifo
+.PHONY: all
+all: upload
+
+.PHONY: upload
+upload: packet-fifo
+	rsync -a --no-g --no-o $^ root@de10:packet-fifo/
 
 %.o.lst: %.o
 #	$(OBJDUMP) -rtdg $< >$@

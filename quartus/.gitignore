@@ -1,4 +1,7 @@
 /db/
 /incremental_db/
 /output_files/*
+# Chain description file (Programmer)
 !/output_files/*.cdf
+# Text-Format Report File
+*.rpt

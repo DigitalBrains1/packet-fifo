@@ -91,11 +91,27 @@
          type = "int";
       }
    }
+   element fifo_f2h_in
+   {
+      datum _sortIndex
+      {
+         value = "16";
+         type = "int";
+      }
+   }
+   element fifo_f2h_in_mm
+   {
+      datum _sortIndex
+      {
+         value = "17";
+         type = "int";
+      }
+   }
    element fifo_f2h_out
    {
       datum _sortIndex
       {
-         value = "13";
+         value = "15";
          type = "int";
       }
    }
@@ -129,6 +145,30 @@
       {
          value = "393216";
          type = "String";
+      }
+   }
+   element fifo_h2f_out
+   {
+      datum _sortIndex
+      {
+         value = "13";
+         type = "int";
+      }
+   }
+   element fifo_h2f_out.out
+   {
+      datum baseAddress
+      {
+         value = "32";
+         type = "String";
+      }
+   }
+   element fifo_h2f_out_mm
+   {
+      datum _sortIndex
+      {
+         value = "14";
+         type = "int";
       }
    }
    element fpga_only_master
@@ -267,6 +307,16 @@
    type="conduit"
    dir="end" />
  <interface
+   name="fifo_f2h_in_mm_external_interface"
+   internal="fifo_f2h_in_mm.external_interface"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="fifo_h2f_out_mm_external_interface"
+   internal="fifo_h2f_out_mm.external_interface"
+   type="conduit"
+   dir="end" />
+ <interface
    name="hps_0_f2h_cold_reset_req"
    internal="hps_0.f2h_cold_reset_req"
    type="reset"
@@ -357,6 +407,42 @@
   <parameter name="USE_PLI" value="0" />
  </module>
  <module
+   name="fifo_f2h_in"
+   kind="altera_avalon_fifo"
+   version="18.1"
+   enabled="1">
+  <parameter name="avalonMMAvalonMMDataWidth" value="32" />
+  <parameter name="avalonMMAvalonSTDataWidth" value="32" />
+  <parameter name="bitsPerSymbol" value="8" />
+  <parameter name="channelWidth" value="0" />
+  <parameter name="deviceFamilyString" value="Cyclone V" />
+  <parameter name="errorWidth" value="0" />
+  <parameter name="fifoDepth" value="8" />
+  <parameter name="fifoInputInterfaceOptions" value="AVALONMM_WRITE" />
+  <parameter name="fifoOutputInterfaceOptions" value="AVALONST_SOURCE" />
+  <parameter name="showHiddenFeatures" value="false" />
+  <parameter name="singleClockMode" value="true" />
+  <parameter name="singleResetMode" value="false" />
+  <parameter name="symbolsPerBeat" value="4" />
+  <parameter name="useBackpressure" value="false" />
+  <parameter name="useIRQ" value="false" />
+  <parameter name="usePacket" value="true" />
+  <parameter name="useReadControl" value="false" />
+  <parameter name="useRegister" value="false" />
+  <parameter name="useWriteControl" value="false" />
+ </module>
+ <module
+   name="fifo_f2h_in_mm"
+   kind="altera_up_external_bus_to_avalon_bridge"
+   version="18.0"
+   enabled="1">
+  <parameter name="AUTO_CLK_CLOCK_RATE" value="50000000" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone V" />
+  <parameter name="addr_size" value="8" />
+  <parameter name="addr_size_multiplier" value="bytes" />
+  <parameter name="data_size" value="32" />
+ </module>
+ <module
    name="fifo_f2h_out"
    kind="altera_avalon_fifo"
    version="18.1"
@@ -405,6 +491,42 @@
   <parameter name="useReadControl" value="false" />
   <parameter name="useRegister" value="false" />
   <parameter name="useWriteControl" value="false" />
+ </module>
+ <module
+   name="fifo_h2f_out"
+   kind="altera_avalon_fifo"
+   version="18.1"
+   enabled="1">
+  <parameter name="avalonMMAvalonMMDataWidth" value="32" />
+  <parameter name="avalonMMAvalonSTDataWidth" value="32" />
+  <parameter name="bitsPerSymbol" value="8" />
+  <parameter name="channelWidth" value="0" />
+  <parameter name="deviceFamilyString" value="Cyclone V" />
+  <parameter name="errorWidth" value="0" />
+  <parameter name="fifoDepth" value="512" />
+  <parameter name="fifoInputInterfaceOptions" value="AVALONST_SINK" />
+  <parameter name="fifoOutputInterfaceOptions" value="AVALONMM_READ" />
+  <parameter name="showHiddenFeatures" value="false" />
+  <parameter name="singleClockMode" value="true" />
+  <parameter name="singleResetMode" value="false" />
+  <parameter name="symbolsPerBeat" value="4" />
+  <parameter name="useBackpressure" value="false" />
+  <parameter name="useIRQ" value="true" />
+  <parameter name="usePacket" value="true" />
+  <parameter name="useReadControl" value="false" />
+  <parameter name="useRegister" value="false" />
+  <parameter name="useWriteControl" value="true" />
+ </module>
+ <module
+   name="fifo_h2f_out_mm"
+   kind="altera_up_external_bus_to_avalon_bridge"
+   version="18.0"
+   enabled="1">
+  <parameter name="AUTO_CLK_CLOCK_RATE" value="50000000" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone V" />
+  <parameter name="addr_size" value="64" />
+  <parameter name="addr_size_multiplier" value="bytes" />
+  <parameter name="data_size" value="32" />
  </module>
  <module
    name="fpga_only_master"
@@ -1025,6 +1147,33 @@
  <connection
    kind="avalon"
    version="18.1"
+   start="fifo_f2h_in_mm.avalon_master"
+   end="fifo_f2h_in.in">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="fifo_h2f_out_mm.avalon_master"
+   end="fifo_h2f_out.in_csr">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="fifo_h2f_out_mm.avalon_master"
+   end="fifo_h2f_out.out">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0020" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
    start="hps_0.h2f_lw_axi_master"
    end="mm_bridge_0.s0">
   <parameter name="arbitrationPriority" value="1" />
@@ -1184,6 +1333,11 @@
    kind="avalon_streaming"
    version="18.1"
    start="fifo_h2f_in.out"
+   end="fifo_h2f_out.in" />
+ <connection
+   kind="avalon_streaming"
+   version="18.1"
+   start="fifo_f2h_in.out"
    end="fifo_f2h_out.in" />
  <connection
    kind="clock"
@@ -1211,12 +1365,32 @@
    kind="clock"
    version="18.1"
    start="clk_0.clk"
+   end="fifo_h2f_out_mm.clk" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="clk_0.clk"
+   end="fifo_f2h_in_mm.clk" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="clk_0.clk"
    end="fifo_h2f_in.clk_in" />
  <connection
    kind="clock"
    version="18.1"
    start="clk_0.clk"
    end="fifo_f2h_out.clk_in" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="clk_0.clk"
+   end="fifo_h2f_out.clk_in" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="clk_0.clk"
+   end="fifo_f2h_in.clk_in" />
  <connection
    kind="clock"
    version="18.1"
@@ -1323,12 +1497,32 @@
    kind="reset"
    version="18.1"
    start="clk_0.clk_reset"
+   end="fifo_h2f_out_mm.reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="fifo_f2h_in_mm.reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
    end="fifo_h2f_in.reset_in" />
  <connection
    kind="reset"
    version="18.1"
    start="clk_0.clk_reset"
    end="fifo_f2h_out.reset_in" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="fifo_h2f_out.reset_in" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="fifo_f2h_in.reset_in" />
  <connection kind="reset" version="18.1" start="clk_0.clk_reset" end="ILC.reset_n" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />

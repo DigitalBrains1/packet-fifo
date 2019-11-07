@@ -98,6 +98,7 @@ struct rdfifo_ctx {
 	size_t numbytes;
 	size_t next;
 	size_t bufsize;
+	size_t word_cnt;
 	uint32_t buf[512];
 };
 
@@ -118,10 +119,15 @@ init_rdfifo(struct rdfifo_ctx *ctx, void *base, void *csr_base)
 	ctx->csr_base = csr_base;
 	ctx->next = 0;
 	ctx->bufsize = 512;
+	ctx->word_cnt = 0;
 
 	/* Flush FIFO */
 	for (uint32_t i = mmio_read32(csr_base, FIFO_LEVEL_REG); i > 0; i--) {
-		mmio_read32(base, FIFO_DATA_REG);
+		uint32_t tmp;
+		tmp = mmio_read32(base, FIFO_DATA_REG);
+		ctx->word_cnt++;
+		printf("Init flush read fifo, read: %6d %#010x\n",
+				ctx->word_cnt, tmp);
 	}
 
 	/* Clear events */
@@ -144,14 +150,18 @@ fifo_read(struct rdfifo_ctx *ctx)
 		return FIFO_NEED_MORE;
 	tmp = mmio_read32(ctx->base, FIFO_DATA_REG);
 	other = mmio_read32(ctx->base, FIFO_OTHER_INFO_REG);
+	ctx->word_cnt++;
 	num_elems--;
 
 	if (ctx->next == 0) {
 		/* Flush until start of packet */
 		while (!(other & FIFO_INFO_SOP) && (num_elems != 0)) {
+			printf("Interpacket flush read fifo, read: "
+					"%6d %#010x\n", ctx->word_cnt, tmp);
 			tmp = mmio_read32(ctx->base, FIFO_DATA_REG);
 			other = mmio_read32(ctx->base,
 					FIFO_OTHER_INFO_REG);
+			ctx->word_cnt++;
 			if (--num_elems == 0)
 				num_elems = mmio_read32(ctx->csr_base,
 						FIFO_LEVEL_REG);
@@ -169,6 +179,7 @@ fifo_read(struct rdfifo_ctx *ctx)
 		ctx->buf[ctx->next++] = ntohl(mmio_read32(ctx->base,
 				FIFO_DATA_REG));
 		other = mmio_read32(ctx->base, FIFO_OTHER_INFO_REG);
+		ctx->word_cnt++;
 		if (--num_elems == 0)
 			num_elems = mmio_read32(ctx->csr_base,
 					FIFO_LEVEL_REG);
@@ -279,7 +290,7 @@ main()
 		tmp += 0x1;
 	}
 
-	fifo_write(fifo_h2f_base, outbuf, 1021);
+	fifo_write(fifo_h2f_base, outbuf, 4);
 	while((res = fifo_read(fifo_f2h_ctx)) == FIFO_NEED_MORE) {}
 	if (res == 0) {
 		uint32_t *p;

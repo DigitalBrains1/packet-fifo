@@ -1,0 +1,55 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/peter/FPGA/DE10-Standard/packet-fifo/quartus/simulation/modelsim
+vavalon_master_writer
+!s110 1572971798
+!i10b 1
+!s100 2UJ6j3B>;mUc4_iAADz3C1
+IM`MS3Nb0d`j94dZT@FRkl1
+Z1 VDg1SIo80bB@j0V0VzS_@n1
+R0
+w1572962812
+8/home/peter/FPGA/DE10-Standard/packet-fifo/src/clash/verilog/Test/avalon_master_writer/avalon_master_writer.v
+F/home/peter/FPGA/DE10-Standard/packet-fifo/src/clash/verilog/Test/avalon_master_writer/avalon_master_writer.v
+L0 5
+Z2 OV;L;10.5b;63
+r1
+!s85 0
+31
+!s108 1572971798.000000
+!s107 /home/peter/FPGA/DE10-Standard/packet-fifo/src/clash/verilog/Test/avalon_master_writer/avalon_master_writer.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+/home/peter/FPGA/DE10-Standard/packet-fifo/src/clash/verilog/Test/avalon_master_writer|/home/peter/FPGA/DE10-Standard/packet-fifo/src/clash/verilog/Test/avalon_master_writer/avalon_master_writer.v|
+!i113 1
+Z3 o-vlog01compat -work work
+!s92 -vlog01compat -work work +incdir+/home/peter/FPGA/DE10-Standard/packet-fifo/src/clash/verilog/Test/avalon_master_writer
+Z4 tCvgOpt 0
+vDE10_Standard_GHRD
+!s110 1572971817
+!i10b 1
+!s100 4>VIhQL_dI<o_`1dSjTQ`0
+ISC@>_^1E@zGX32J91Mg4>3
+R1
+R0
+w1572963499
+8/home/peter/FPGA/DE10-Standard/packet-fifo/quartus/simulation/modelsim/DE10_Standard_GHRD.vo
+F/home/peter/FPGA/DE10-Standard/packet-fifo/quartus/simulation/modelsim/DE10_Standard_GHRD.vo
+L0 31
+R2
+r1
+!s85 0
+31
+!s108 1572971814.000000
+!s107 /home/peter/FPGA/DE10-Standard/packet-fifo/quartus/simulation/modelsim/DE10_Standard_GHRD.vo|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+.|/home/peter/FPGA/DE10-Standard/packet-fifo/quartus/simulation/modelsim/DE10_Standard_GHRD.vo|
+!i113 1
+R3
+!s92 -vlog01compat -work work +incdir+.
+R4
+n@d@e10_@standard_@g@h@r@d

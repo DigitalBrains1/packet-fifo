@@ -1,0 +1,33 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/peter/FPGA/DE10-Standard/packet-fifo/quartus/simulation/modelsim
+vDE10_Standard_GHRD
+!s110 1572690492
+!i10b 1
+!s100 bXXk35SBAid6]1lVoP[473
+IMNUOQ6<mf@CI38NF_JM1?3
+VDg1SIo80bB@j0V0VzS_@n1
+R0
+w1572690464
+8DE10_Standard_GHRD.vo
+FDE10_Standard_GHRD.vo
+L0 31
+OV;L;10.5b;63
+r1
+!s85 0
+31
+!s108 1572690490.000000
+!s107 DE10_Standard_GHRD.vo|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+.|DE10_Standard_GHRD.vo|
+!i113 1
+o-vlog01compat -work work
+!s92 -vlog01compat -work work +incdir+.
+tCvgOpt 0
+n@d@e10_@standard_@g@h@r@d
