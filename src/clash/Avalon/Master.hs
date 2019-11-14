@@ -1,6 +1,7 @@
 module Avalon.Master where
 
 import Clash.Prelude
+import qualified Prelude as P
 
 {-
  - Open questions:
@@ -9,7 +10,22 @@ import Clash.Prelude
  -   this hurt?
  -}
 
-data AvalonOp = AvalonRead | AvalonWrite deriving (Eq, Generic, NFDataX)
+avalonMasterExtInputNames prefix
+    = PortProduct "" $ P.map (PortName . (prefix P.++))
+                             [ "external_interface_read_data"
+                             , "external_interface_acknowledge"
+                             ]
+
+avalonMasterExtOutputNames prefix
+    = PortProduct "" $ P.map (PortName . (prefix P.++))
+                             [ "external_interface_address"
+                             , "external_interface_write_data"
+                             , "external_interface_read"
+                             , "external_interface_write"
+                             , "external_interface_byte_enable"
+                             ]
+
+data AvalonCmd = AvalonRead | AvalonWrite deriving (Eq, Generic, NFDataX)
 
 data AvalonMS m n tag =
         AvalonMS
@@ -36,27 +52,30 @@ avalonMaster
        , KnownNat m
        , KnownNat n
        , NFDataX tag)
-    -- External bus signals
-    => Signal dom (Unsigned n)      -- Avalon ReadData
-    -> Signal dom Bool              -- Avalon Acknowledge
-    -- Interface for use of this component
-    -> Signal dom Bool              -- Operation valid
+    => ( Signal dom (Unsigned n)    -- Avalon ReadData
+       , Signal dom Bool            -- Avalon Acknowledge
+       )
+    -- ^ External bus signals
     -> Signal dom Bool              -- Result ready
-    -> Signal dom tag               -- Passthrough tag for request matching
-    -> Signal dom AvalonOp          -- Read or write
-    -> Signal dom (Unsigned m)      -- Address
-    -> Signal dom (Unsigned n)      -- Write data
-       -- External bus signals
-    -> ( Signal dom (Unsigned m)    -- Address
+    -> ( Signal dom Bool            -- Operation valid
+       , Signal dom AvalonCmd       -- Read or write
+       , Signal dom tag             -- Passthrough tag for request matching
+       , Signal dom (Unsigned m)    -- Address
        , Signal dom (Unsigned n)    -- Write data
-       , Signal dom Bool            -- Read strobe
-       , Signal dom Bool            -- Write strobe
-       , Signal dom (BitVector 4)   -- ByteEnable
+       )
+    -> ( ( Signal dom (Unsigned m)  -- Address
+         , Signal dom (Unsigned n)  -- Write data
+         , Signal dom Bool          -- Read strobe
+         , Signal dom Bool          -- Write strobe
+         , Signal dom (BitVector 4) -- ByteEnable
+         )
+       -- External bus signals
        -- Interface for use of this component
-       , Signal dom Bool            -- Result valid
        , Signal dom Bool            -- Operation ready
-       , Signal dom tag             -- Passthrough tag
-       , Signal dom (Unsigned n)    -- Read data
+       , ( Signal dom Bool          -- Result valid
+         , Signal dom tag           -- Passthrough tag
+         , Signal dom (Unsigned n)  -- Read data
+         )
        )
 
 {-
@@ -65,10 +84,12 @@ avalonMaster
  - Bus is busy as long as avRead or avWrite is asserted. We are ready for the
  - next operation when the bus is idle and our output registers available.
  -}
-avalonMaster avRData avAck opValid resReady tagIn op opAddr opData
-    = ( avAddr, avWData, avRead, avWrite, avBE, resValid, opReady
-      , tagOut , resData)
+avalonMaster avIn resReady op
+    = (avOut, opReady, res)
     where
+        avOut = (avAddr, avWData, avRead, avWrite, avBE)
+        res = (resValid, tagOut, resData)
+
         opReady = not <$> (resValid .||. avRead .||. avWrite)
         avAddr = amsAddr <$> state
         avWData = amsOpData <$> state
@@ -80,8 +101,7 @@ avalonMaster avRData avAck opValid resReady tagIn op opAddr opData
         avBE = pure 0b1111
 
         state = moore avalonMasterT id avalonMSInit
-                      (bundle ( avRData, avAck, opValid, opReady, resReady
-                              , tagIn, op, opAddr, opData))
+                      (bundle (bundle avIn, opReady, resReady, bundle op))
 
 avalonMasterT
     :: ( KnownNat m
@@ -89,25 +109,29 @@ avalonMasterT
        , NFDataX tag
        )
     => AvalonMS m n tag
-    -> ( Unsigned n     -- Avalon ReadData
-       , Bool           -- Avalon Acknowledge
-       , Bool           -- Operation valid
+    -> ( ( Unsigned n   -- Avalon ReadData
+         , Bool         -- Avalon Acknowledge
+         )
        , Bool           -- Operation ready
        , Bool           -- Result ready
-       , tag            -- Passthrough tag for request matching
-       , AvalonOp       -- Read or write
-       , Unsigned m     -- Address
-       , Unsigned n     -- Write data
+       , ( Bool         -- Operation valid
+         , AvalonCmd    -- Read or write
+         , tag          -- Passthrough tag for request matching
+         , Unsigned m   -- Address
+         , Unsigned n   -- Write data
+         )
        )
     -> AvalonMS m n tag
 avalonMasterT state
-    (avRData, avAck, opValid, opReady, resReady, tagIn, op, opAddr, opData)
+    (avIn, opReady, resReady, op)
     = state''
     where
+        (avRData, avAck) = avIn
+        (opValid, opCmd, tagIn, opAddr, opData) = op
         state' =
             if opValid && opReady then
-                state { amsRead = op == AvalonRead
-                      , amsWrite = op == AvalonWrite
+                state { amsRead = opCmd == AvalonRead
+                      , amsWrite = opCmd == AvalonWrite
                       , amsAddr = opAddr
                       , amsOpData = opData
                       , amsTag = tagIn
@@ -124,14 +148,3 @@ avalonMasterT state
                        }
             else
                 state' { amsResValid = amsResValid state && (not resReady) }
-
-amB i = bundle o
-    where
-        (avRData, avAck, opValid, resReady, tagIn, op, opAddr, opWData)
-            = unbundle i
-        o = avalonMaster avRData avAck opValid resReady tagIn op opAddr
-            opWData
-
-idleInput :: (Unsigned 32, Bool, Bool, Bool, Index 3, AvalonOp, Unsigned 6, Unsigned 32)
-idleInput = ( undefined, False, False, False, undefined, AvalonRead, undefined
-            , undefined)

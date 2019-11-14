@@ -16,24 +16,14 @@ traceSignal1F = flip const
             = [ PortName "clk"
               , PortName "rst_n"
               , PortName "fpga_debounced_buttons"
-              , PortName "fifo_f2h_in_mm_external_interface_read_data"
-              , PortName "fifo_f2h_in_mm_external_interface_acknowledge"
-              , PortName "fifo_h2f_out_mm_external_interface_read_data"
-              , PortName "fifo_h2f_out_mm_external_interface_acknowledge"
+              , avalonMasterExtInputNames "fifo_f2h_in_mm_"
+              , avalonMasterExtInputNames "fifo_h2f_out_mm_"
               ]
         , t_output
             = PortProduct ""
                 [ PortName "fpga_led_internal"
-                , PortName "fifo_f2h_in_mm_external_interface_address"
-                , PortName "fifo_f2h_in_mm_external_interface_write_data"
-                , PortName "fifo_f2h_in_mm_external_interface_read"
-                , PortName "fifo_f2h_in_mm_external_interface_write"
-                , PortName "fifo_f2h_in_mm_external_interface_byte_enable"
-                , PortName "fifo_h2f_out_mm_external_interface_address"
-                , PortName "fifo_h2f_out_mm_external_interface_write_data"
-                , PortName "fifo_h2f_out_mm_external_interface_read"
-                , PortName "fifo_h2f_out_mm_external_interface_write"
-                , PortName "fifo_h2f_out_mm_external_interface_byte_enable"
+                , avalonMasterExtOutputNames "fifo_f2h_in_mm_"
+                , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
                 ]
         }) #-}
 avalonMasterWriter clk rst_n
@@ -46,84 +36,86 @@ avalonMasterWriter'
     :: SystemClockResetEnable
     => Signal System (BitVector 3)
     -- ^ fpga_debounced_buttons
-    -> Signal System (Unsigned 32)
-    -- ^ fifo_f2h_in_mm_external_interface_read_data
-    -> Signal System Bool
-    -- ^ fifo_f2h_in_mm_external_interface_acknowledge
-    -> Signal System (Unsigned 32)
-    -- ^ fifo_h2f_out_mm_external_interface_read_data
-    -> Signal System Bool
-    -- ^ fifo_h2f_out_mm_external_interface_acknowledge
+    -> ( Signal System (Unsigned 32)
+       -- ^ fifo_f2h_in_mm_external_interface_read_data
+       , Signal System Bool
+       -- ^ fifo_f2h_in_mm_external_interface_acknowledge
+       )
+    -> ( Signal System (Unsigned 32)
+       -- ^ fifo_h2f_out_mm_external_interface_read_data
+       , Signal System Bool
+       -- ^ fifo_h2f_out_mm_external_interface_acknowledge
+       )
     -> ( Signal System (Unsigned 10)
        -- ^ fpga_led_internal
-       , Signal System (Unsigned 3)
-       -- ^ fifo_f2h_in_mm_external_interface_address
-       , Signal System (Unsigned 32)
-       -- ^ fifo_f2h_in_mm_external_interface_write_data
-       , Signal System Bool
-       -- ^ fifo_f2h_in_mm_external_interface_read
-       , Signal System Bool
-       -- ^ fifo_f2h_in_mm_external_interface_write
-       , Signal System (BitVector 4)
-       -- ^ fifo_f2h_in_mm_external_interface_byte_enable
-       , Signal System (Unsigned 6)
-       -- ^ fifo_h2f_out_mm_external_interface_address
-       , Signal System (Unsigned 32)
-       -- ^ fifo_h2f_out_mm_external_interface_write_data
-       , Signal System Bool
-       -- ^ fifo_h2f_out_mm_external_interface_read
-       , Signal System Bool
-       -- ^ fifo_h2f_out_mm_external_interface_write
-       , Signal System (BitVector 4)
-       -- ^ fifo_h2f_out_mm_external_interface_byte_enable
+       , ( Signal System (Unsigned 3)
+         -- ^ fifo_f2h_in_mm_external_interface_address
+         , Signal System (Unsigned 32)
+         -- ^ fifo_f2h_in_mm_external_interface_write_data
+         , Signal System Bool
+         -- ^ fifo_f2h_in_mm_external_interface_read
+         , Signal System Bool
+         -- ^ fifo_f2h_in_mm_external_interface_write
+         , Signal System (BitVector 4)
+         -- ^ fifo_f2h_in_mm_external_interface_byte_enable
+         )
+       , ( Signal System (Unsigned 6)
+         -- ^ fifo_h2f_out_mm_external_interface_address
+         , Signal System (Unsigned 32)
+         -- ^ fifo_h2f_out_mm_external_interface_write_data
+         , Signal System Bool
+         -- ^ fifo_h2f_out_mm_external_interface_read
+         , Signal System Bool
+         -- ^ fifo_h2f_out_mm_external_interface_write
+         , Signal System (BitVector 4)
+         -- ^ fifo_h2f_out_mm_external_interface_byte_enable
+         )
        )
 
-avalonMasterWriter' _ f2hRData f2hAck h2fRData h2fAck
+avalonMasterWriter' _ f2hIn h2fIn
     = ( pure 0
-      , traceSignal1F "f2hAddr" f2hAddr
-      , traceSignal1F "f2hWData" f2hWData
-      , traceSignal1F "f2hRead" f2hRead
-      , traceSignal1F "f2hWrite" f2hWrite
-      , traceSignal1F "f2hBE" f2hBE
-      , h2fAddr
-      , h2fWData
-      , h2fRead
-      , h2fWrite
-      , h2fBE)
+      , ( traceSignal1F "f2hAddr" f2hAddr
+        , traceSignal1F "f2hWData" f2hWData
+        , traceSignal1F "f2hRead" f2hRead
+        , traceSignal1F "f2hWrite" f2hWrite
+        , traceSignal1F "f2hBE" f2hBE
+        )
+      , h2fOut
+      )
     where
-        ( f2hAddr, f2hWData, f2hRead, f2hWrite, f2hBE, f2hResValid, f2hOpReady, _, _)
+        (f2hRData, f2hAck) = f2hIn
+        (f2hAddr, f2hWData, f2hRead, f2hWrite, f2hBE) = f2hOut
+
+        (f2hOut, f2hOpReady, f2hRes)
             = avalonMaster
-                (traceSignal1F "f2hRData" f2hRData)
-                (traceSignal1F "f2hAck" f2hAck)
-                f2hOpValid (pure True) (pure ())
-                (pure AvalonWrite) f2hOpAddr f2hOpData
+                ( (traceSignal1F "f2hRData" f2hRData)
+                , (traceSignal1F "f2hAck" f2hAck)
+                )
+                (pure True) f2hOp
 
-        ( h2fAddr, h2fWData, h2fRead, h2fWrite, h2fBE, h2fResValid, h2fOpReady, _, h2fResData)
+        (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
-                h2fRData h2fAck h2fOpValid h2fResReady (pure ())
-                (pure AvalonRead) h2fOpAddr (pure undefined)
+                h2fIn h2fResReady h2fOp
 
-        (h2fOpValid, h2fResReady, h2fOpAddr)
-            = (pure False, pure True, pure undefined)
-            :: ( Signal System Bool, Signal System Bool
-               , Signal System (Unsigned 6))
+        h2fResReady = pure True
+        h2fOp = ( pure False, pure undefined, pure ()
+                , pure (undefined :: Unsigned 6), pure undefined)
 
-
-        (f2hOpValid, f2hOpAddr, f2hOpData)
-            = writeDummyCounter f2hOpReady
+        f2hOp = writeDummyCounter f2hOpReady
 
 writeDummyCounter
     :: HiddenClockResetEnable dom
     => Signal dom Bool
     -> ( Signal dom Bool
+       , Signal dom AvalonCmd
+       , Signal dom ()
        , Signal dom (Unsigned 3)
        , Signal dom (Unsigned 32)
        )
-
 writeDummyCounter opReady
     = mealyB writeDummyCounter' 0 opReady
 
-writeDummyCounter' cnt opReady = (cnt', (opValid, 0, cnt))
+writeDummyCounter' cnt opReady = (cnt', (opValid, AvalonWrite, (), 0, cnt))
     where
         maxCnt = 256
         opValid = cnt /= maxCnt
@@ -136,14 +128,17 @@ mockTopEntity
 
 mockTopEntity = f2hAck
     where
-        (_, f2hAddr, f2hWData, f2hRead, f2hWrite, f2hBE, _, _, _, _, _)
+
+        (f2hRData, f2hAck) = f2hIn
+
+        (_, f2hOut, _)
             = avalonMasterWriter
-                clockGen (pure True) (pure 0b111) f2hRData f2hAck
-                (pure undefined) (pure False)
-        (f2hRData, f2hAck)
+                clockGen (pure True) (pure 0b111) f2hIn
+                (pure undefined, pure False)
+        f2hIn
             = withClockResetEnable
                 clockGen resetGen enableGen
-                mockAvalonSlave f2hAddr f2hWData f2hRead f2hWrite f2hBE
+                mockAvalonSlave f2hOut
 
 makeVCD
     = do
