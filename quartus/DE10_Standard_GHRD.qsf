@@ -1011,7 +1011,7 @@ set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
-set_global_assignment -name VERILOG_FILE ../src/clash/verilog/Test/avalon_master_test/avalon_master_test.v
+set_global_assignment -name VERILOG_FILE ../src/clash/verilog/Test/packet_fifo/packet_fifo.v
 set_global_assignment -name VERILOG_FILE DE10_Standard_GHRD.v
 set_global_assignment -name SDC_FILE DE10_Standard_GHRD.sdc
 set_global_assignment -name VERILOG_FILE ip/debounce/debounce.v

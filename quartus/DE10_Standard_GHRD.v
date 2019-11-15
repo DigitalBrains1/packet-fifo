@@ -364,7 +364,7 @@ soc_system u0 (
 	.reset_reset_n                         (1'b1)                                  //                reset.reset_n
     );
 
-avalon_master_test avalon_master_test_inst (
+packet_fifo packet_fifo_inst (
 // Inputs
 .clk	(fpga_clk_50),
 .rst_n        (fpga_debounced_buttons[0]),

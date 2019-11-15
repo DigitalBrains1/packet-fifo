@@ -120,7 +120,7 @@ init_rdfifo(struct rdfifo_ctx *ctx, void *base, void *csr_base)
 	ctx->next = 0;
 	ctx->bufsize = 512;
 	ctx->word_cnt = 0;
-
+#if 0
 	/* Flush FIFO */
 	for (uint32_t i = mmio_read32(csr_base, FIFO_LEVEL_REG); i > 0; i--) {
 		uint32_t tmp;
@@ -129,7 +129,7 @@ init_rdfifo(struct rdfifo_ctx *ctx, void *base, void *csr_base)
 		printf("Init flush read fifo, read: %6d %#010x\n",
 				ctx->word_cnt, tmp);
 	}
-
+#endif
 	/* Clear events */
 	mmio_write32(csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
 	if ((mmio_read32(csr_base, FIFO_EVENT_REG) & FIFO_EVENT_ALL) != 0) {
