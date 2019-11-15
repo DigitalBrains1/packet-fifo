@@ -17,7 +17,7 @@ mockAvalonSlave
 
 mockAvalonSlave (addr, wdata, read, write, be)
     = addr `seq` wdata `seq` read `seq` write `seq` be `seq`
-      (pure undefined, ack)
+      (pure 10, ack)
     where
         ack = moore cntr (== 0) (maxBound :: Index 3)
                     (read .||. write)
