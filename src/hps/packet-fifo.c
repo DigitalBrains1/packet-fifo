@@ -1,11 +1,6 @@
 /* Notes:
  *
  * - Uses lightweight bridge for now
- *
- * - TODO: Should there even be ntohl()/htonl()? FIFO_LEVEL_REG could count to
- *   511 without issues, that seems to indicate it is already handled at the
- *   hardware level, right? It should become clear once there is CλaSH code on
- *   the other side of the FIFO.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -170,13 +165,13 @@ fifo_read(struct rdfifo_ctx *ctx)
 			return FIFO_NEED_MORE;
 	}
 
-	ctx->buf[ctx->next++] = ntohl(tmp);
+	ctx->buf[ctx->next++] = htonl(tmp);
 	while (!(other & FIFO_INFO_EOP) && (num_elems != 0)) {
 		if (ctx->next == ctx->bufsize) {
 			ctx->next = 0;
 			return FIFO_OVERLONG_ERROR;
 		}
-		ctx->buf[ctx->next++] = ntohl(mmio_read32(ctx->base,
+		ctx->buf[ctx->next++] = htonl(mmio_read32(ctx->base,
 				FIFO_DATA_REG));
 		other = mmio_read32(ctx->base, FIFO_OTHER_INFO_REG);
 		ctx->word_cnt++;
@@ -208,7 +203,7 @@ fifo_write(void *fifo_base, const void *buf, const size_t len)
 		mmio_write32(fifo_base, FIFO_OTHER_INFO_REG, FIFO_INFO_SOP);
 		for (i = 0; i < num_words * 4; i += 4) {
 			memcpy(&word, &buf8[i], 4);
-			mmio_write32(fifo_base, FIFO_DATA_REG, htonl(word));
+			mmio_write32(fifo_base, FIFO_DATA_REG, ntohl(word));
 		}
 	}
 
@@ -218,7 +213,7 @@ fifo_write(void *fifo_base, const void *buf, const size_t len)
 			| FIFO_INFO_EMPTY_SET(4 - num_tail));
 	word = 0;
 	memcpy(&word, &buf8[i], num_tail);
-	mmio_write32(fifo_base, FIFO_DATA_REG, htonl(word));
+	mmio_write32(fifo_base, FIFO_DATA_REG, ntohl(word));
 }
 
 static void
@@ -290,7 +285,7 @@ main()
 		tmp += 0x1;
 	}
 
-	fifo_write(fifo_h2f_base, outbuf, 4);
+	fifo_write(fifo_h2f_base, outbuf, 17);
 	while((res = fifo_read(fifo_f2h_ctx)) == FIFO_NEED_MORE) {}
 	if (res == 0) {
 		uint32_t *p;

@@ -1,6 +1,7 @@
 module Test.Avalon.PacketWriter where
 
 import Clash.Prelude
+
 import qualified Data.Text.IO as TIO
 import Avalon.PacketWriter
 import Avalon.Master
@@ -91,7 +92,7 @@ avalonPacketWriter' _ f2hIn h2fIn
                 ( (traceSignal1F "f2hRData" f2hRData)
                 , (traceSignal1F "f2hAck" f2hAck)
                 )
-                (pure True) f2hOp
+                f2hResReady f2hOp
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
@@ -102,6 +103,7 @@ avalonPacketWriter' _ f2hIn h2fIn
                 , pure (undefined :: Unsigned 6), pure undefined)
 
         (pInReady, f2hOp) = packetWriter f2hOpReady pIn
+        f2hResReady = pure True
 
         pIn = writeDummyCounter pInReady
 
