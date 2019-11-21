@@ -3,5 +3,12 @@
 /output_files/*
 # Chain description file (Programmer)
 !/output_files/*.cdf
+# Verilog Output File
+/simulation/**/*.vo
+# Cross-Reference File
+/simulation/**/*.xrf
+# Workspace File
+*.qws
 # Text-Format Report File
 *.rpt
+*.log
