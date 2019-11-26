@@ -77,3 +77,34 @@ vrfyVal
              , 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
              -- ^ icmp header
              ] :: [Unsigned 8]))
+
+fakeReply
+    :: HiddenClockResetEnable dom
+    => Signal dom (Maybe (Unsigned 11))
+       -- ^ Send reply
+    -> Signal dom (Unsigned 8)
+       -- ^ RAM read data
+    -> ( Signal dom Bool
+         -- ^ RAM busy
+       , Signal dom (Unsigned 11)
+         -- ^ RAM read address
+       , Signal dom (Maybe (Bool, Unsigned 8))
+         -- ^ Stream-out
+       )
+
+fakeReply sendReply readData
+    = mealyB fakeReply' ( 0 :: Unsigned 12
+                        , 0 :: Unsigned 12)
+             (sendReply, readData)
+
+fakeReply' (st, total) (sendReply, readData)
+    = ((st', total'), (ramBusy, readAddr, sOut))
+    where
+        ramBusy  = st /= 0
+        readAddr = resize st
+        sOut | st < 2    = Nothing
+             | otherwise = Just (more, readData)
+        more = st < total
+        total' = maybe total (\t -> resize $ t + 2) sendReply
+        st' | st < total = st + 1
+            | otherwise  = 0
