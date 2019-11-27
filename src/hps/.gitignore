@@ -1,4 +1,5 @@
-/src/hps/packet-fifo
+/packet-fifo
+/tapping/tapping
 *.o
 *.o.lst
 *.c.i
