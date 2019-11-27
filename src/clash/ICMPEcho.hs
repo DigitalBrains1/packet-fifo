@@ -93,18 +93,59 @@ fakeReply
        )
 
 fakeReply sendReply readData
-    = mealyB fakeReply' ( 0 :: Unsigned 12
-                        , 0 :: Unsigned 12)
+    = mealyB fakeReply' fakeReplyIS
              (sendReply, readData)
 
-fakeReply' (st, total) (sendReply, readData)
-    = ((st', total'), (ramBusy, readAddr, sOut))
+fakeReplyIS = ( cntInit :: Unsigned 12
+              , 0       :: Unsigned 12
+              , 0       :: Unsigned 8
+              )
+
+fakeReply' (cnt, total, prevB) (sendReply, readData)
+    = ((cnt', total', prevB'), (ramBusy, readAddr, sOut))
     where
-        ramBusy  = st /= 0
-        readAddr = resize st
-        sOut | st < 2    = Nothing
-             | otherwise = Just (more, readData)
-        more = st < total
-        total' = maybe total (\t -> resize $ t + 2) sendReply
-        st' | st < total = st + 1
-            | otherwise  = 0
+        ramBusy  = cnt /= cntInit
+        readAddr = truncateB cnt
+        sOut | sOutValid = Just (more, sData)
+             | otherwise = Nothing
+        more = cnt < total + 3
+        sOutValid = not (cnt >= cntInit && cnt < cntInit + 3)
+
+        prevB' | cnt == 39 = resize cksum
+               | otherwise = readData
+
+        total' | total > 0 && not more = 0
+               | otherwise              = maybe total resize sendReply
+
+        cnt' | total == 0                           = cntInit
+             | cnt < total + 3                      = cntAdvance
+             | otherwise                            = cntInit
+
+        cntAdvance
+            = case cnt of
+                11 ->  0   -- Ethernet src -> Ethernet dst MAC
+                5  -> 12   -- Ethernet dst MAC -> Ethertype
+                25 -> 30   -- IPv4 Header sum -> dest IP
+                33 -> 26   -- Dest IP -> src IP
+                29 -> 34   -- Src IP -> ICMP
+                _  -> cnt + 1
+
+        -- Note three cycle delay of readData vs. cnt
+        sData
+            = case cnt of
+                37 -> 0                   -- ICMP type
+                39 -> resize $ cksum `shiftR` 8
+                _  -> prevB
+
+        cksum = bitCoerce (prevB :> readData :> Nil) ~+~ 0x0800 :: Unsigned 16
+
+(~+~) :: KnownNat n
+      => Unsigned n
+      -> Unsigned n
+      -> Unsigned n
+a ~+~ b = truncateB summed + resize (bitCoerce carry)
+    where
+        summed = a `add` b
+        carry = msb summed
+
+cntInit = 6 -- Ethernet source MAC
