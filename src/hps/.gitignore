@@ -1,4 +1,4 @@
-/packet-fifo
+/test-fifo
 /tapping/tapping
 *.o
 *.o.lst

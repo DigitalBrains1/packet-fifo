@@ -12,8 +12,10 @@ ARCH= arm
 all: upload
 
 .PHONY: upload
-upload: packet-fifo
+upload: test-fifo
 	rsync -a --no-g --no-o $^ root@de10:packet-fifo/
+
+test-fifo: test-fifo.o packet-fifo.o
 
 %.o.lst: %.o
 #	$(OBJDUMP) -rtdg $< >$@
@@ -28,4 +30,4 @@ upload: packet-fifo
 
 .PHONY: clean
 clean:
-	rm -f packet-fifo *.o *.o.lst *.c.i *.c.s
+	rm -f test-fifo *.o *.o.lst *.c.i *.c.s
