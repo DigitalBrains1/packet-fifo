@@ -1,4 +1,5 @@
 /test-fifo
+/fpgaeth
 /tapping/tapping
 *.o
 *.o.lst
