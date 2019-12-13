@@ -102,9 +102,9 @@ fakeReply sendReply readData
     = mealyB fakeReply' fakeReplyIS
              (sendReply, readData)
 
-fakeReplyIS = ( cntInit :: Unsigned 12
-              , 0       :: Unsigned 12
-              , 0       :: Unsigned 8
+fakeReplyIS = ( cntInit   :: Unsigned 12
+              , 0         :: Unsigned 12
+              , undefined :: Unsigned 8
               )
 
 fakeReply' (cnt, total, prevB) (sendReply, readData)
@@ -121,7 +121,7 @@ fakeReply' (cnt, total, prevB) (sendReply, readData)
                | otherwise = readData
 
         total' | total > 0 && not more = 0
-               | otherwise              = maybe total resize sendReply
+               | otherwise             = maybe total resize sendReply
 
         cnt' | total == 0                           = cntInit
              | cnt < total + 3                      = cntAdvance
