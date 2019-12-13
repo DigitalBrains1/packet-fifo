@@ -37,7 +37,6 @@ mockTopEntity'
             = packetToByteStream packet streamReady
 
         streamReady = pure True
-ge | update
         h2fIn
             = mockAvalonSlave h2fOut
 
