@@ -42,8 +42,10 @@ testBench pkt isEcho = done
         rst = systemResetGen
         en = tbEnableGen
 
-main =     (print $ P.head $ dropWhile not $ sample
-                  $ testBench $(listToVecTH echoReqPacket) True)
-       >>
-           (print $ P.head $ dropWhile not $ sample
-                  $ testBench $(listToVecTH tcpSynPacket) False)
+runManyTBs tbs
+    = print $ P.head $ dropWhile id
+    $ P.map (P.head . dropWhile not . sample) tbs P.++ [False]
+
+main = runManyTBs ([ testBench $(listToVecTH echoReqPacket) True
+                   , testBench $(listToVecTH tcpSynPacket)  False
+                   ])
