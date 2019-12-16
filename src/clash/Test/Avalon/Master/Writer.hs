@@ -91,11 +91,11 @@ avalonMasterWriter' _ f2hIn h2fIn
                 ( (traceSignal1F "f2hRData" f2hRData)
                 , (traceSignal1F "f2hAck" f2hAck)
                 )
-                (pure True) f2hOp
+                f2hOp (pure True)
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
-                h2fIn h2fResReady h2fOp
+                h2fIn h2fOp h2fResReady
 
         h2fResReady = pure True
         h2fOp = ( pure False, pure undefined, pure ()

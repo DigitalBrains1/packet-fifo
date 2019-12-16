@@ -52,16 +52,16 @@ avalonPacketEchoXfm xfm _ f2hIn h2fIn
     where
         (f2hOut, f2hOpReady, f2hRes)
             = avalonMaster
-                f2hIn f2hResReady f2hOp
+                f2hIn f2hOp f2hResReady
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
-                h2fIn h2fResReady h2fOp
+                h2fIn h2fOp h2fResReady
 
         (h2fResReady, pOut, h2fOp)
-            = packetReader packetReady h2fOpReady h2fRes
+            = packetReader h2fRes packetReady h2fOpReady
 
-        (packetReady, f2hOp) = packetWriter f2hOpReady pIn
+        (packetReady, f2hOp) = packetWriter pIn f2hOpReady
         f2hResReady = pure True
 
         (pOutValid, pOutData, pOutOther) = pOut

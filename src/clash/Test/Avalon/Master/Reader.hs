@@ -74,7 +74,7 @@ avalonMasterReader' _ f2hIn h2fIn
     where
         (f2hOut, f2hOpReady, f2hRes)
             = avalonMaster
-                f2hIn f2hResReady f2hOp
+                f2hIn f2hOp f2hResReady
 
         f2hResReady = pure True
         f2hOp = ( pure False, pure undefined, pure ()
@@ -82,7 +82,7 @@ avalonMasterReader' _ f2hIn h2fIn
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
-                h2fIn h2fResReady h2fOp
+                h2fIn h2fOp h2fResReady
 
         (leds, h2fResReady, h2fOp)
             = ledFillLevel h2fOpReady h2fRes

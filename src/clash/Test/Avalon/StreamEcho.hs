@@ -76,16 +76,16 @@ avalonStreamEcho' _ f2hIn h2fIn
     where
         (f2hOut, f2hOpReady, f2hRes)
             = avalonMaster
-                f2hIn f2hResReady f2hOp
+                f2hIn f2hOp f2hResReady
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
-                h2fIn h2fResReady h2fOp
+                h2fIn h2fOp h2fResReady
 
         (h2fResReady, h2fPacket, h2fOp)
-            = packetReader h2fPacketReady h2fOpReady h2fRes
+            = packetReader h2fRes h2fPacketReady h2fOpReady
 
-        (f2hPacketReady, f2hOp) = packetWriter f2hOpReady f2hPacket
+        (f2hPacketReady, f2hOp) = packetWriter f2hPacket f2hOpReady
         f2hResReady = pure True
 
         (h2fPacketReady, stream)

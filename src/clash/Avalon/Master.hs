@@ -56,13 +56,13 @@ avalonMaster
        , Signal dom Bool            -- Avalon Acknowledge
        )
     -- ^ External bus signals
-    -> Signal dom Bool              -- Result ready
     -> ( Signal dom Bool            -- Operation valid
        , Signal dom AvalonCmd       -- Read or write
        , Signal dom tag             -- Passthrough tag for request matching
        , Signal dom (Unsigned m)    -- Address
        , Signal dom (Unsigned n)    -- Write data
        )
+    -> Signal dom Bool              -- Result ready
     -> ( ( Signal dom (Unsigned m)  -- Address
          , Signal dom (Unsigned n)  -- Write data
          , Signal dom Bool          -- Read strobe
@@ -84,7 +84,7 @@ avalonMaster
  - Bus is busy as long as avRead or avWrite is asserted. We are ready for the
  - next operation when the bus is idle and our output registers available.
  -}
-avalonMaster avIn resReady op
+avalonMaster avIn op resReady
     = (avOut, opReady, res)
     where
         avOut = (avAddr, avWData, avRead, avWrite, avBE)

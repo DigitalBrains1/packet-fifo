@@ -12,17 +12,17 @@ fifoInfoEOP = 2
 
 packetWriter
     :: HiddenClockResetEnable dom
-    => Signal dom Bool
+    => ( Signal dom Bool
+       -- ^ Packet in valid
+       , Signal dom (Unsigned 32)
+       -- ^ Packet in data
+       , Signal dom (Unsigned 32)
+       -- ^ Packet in other info
+       )
+    -> Signal dom Bool
        -- ^ Avalon op ready
     -> ( Signal dom Bool
-       -- ^ Stream-in valid
-       , Signal dom (Unsigned 32)
-       -- ^ Stream-in data
-       , Signal dom (Unsigned 32)
-       -- ^ Stream-in other info
-       )
-    -> ( Signal dom Bool
-       -- ^ Stream-in ready
+       -- ^ Packet in ready
        , ( Signal dom Bool
          -- ^ Avalon op valid
          , Signal dom AvalonCmd
@@ -36,7 +36,7 @@ packetWriter
          )
        )
 
-packetWriter opReady pIn = (pInReady, op)
+packetWriter pIn opReady = (pInReady, op)
     where
         op = (opValid, pure AvalonWrite, pure (), opAddr, opData)
         (pInValid, pInData, pInOther) = pIn

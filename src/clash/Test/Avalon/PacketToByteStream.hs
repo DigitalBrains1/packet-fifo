@@ -28,10 +28,10 @@ mockTopEntity'
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
-                h2fIn h2fResReady h2fOp
+                h2fIn h2fOp h2fResReady
 
         (h2fResReady, packet', h2fOp)
-            = packetReader (pure True) h2fOpReady h2fRes
+            = packetReader h2fRes (pure True) h2fOpReady
 
         (packetReady, stream)
             = packetToByteStream packet streamReady

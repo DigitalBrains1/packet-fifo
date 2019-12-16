@@ -13,25 +13,25 @@ data AvalonTag = DataTag | OtherTag | FillTag
 
 packetReader
     :: HiddenClockResetEnable dom
-    => Signal dom Bool
-       -- ^ Stream-out ready
-    -> Signal dom Bool
-       -- ^ Avalon op ready
-    -> ( Signal dom Bool
+    => ( Signal dom Bool
        -- ^ Avalon result valid
        , Signal dom AvalonTag
        -- ^ Avalon result tag
        , Signal dom (Unsigned 32)
        -- ^ Avalon result data
        )
+    -> Signal dom Bool
+       -- ^ Packet out ready
+    -> Signal dom Bool
+       -- ^ Avalon op ready
     -> ( Signal dom Bool
        -- ^ Avalon result ready
        , ( Signal dom Bool
-         -- ^ Stream-out valid
+         -- ^ Packet out valid
          , Signal dom (Unsigned 32)
-         -- ^ Stream-out data
+         -- ^ Packet out data
          , Signal dom (Unsigned 32)
-         -- ^ Stream-out other info
+         -- ^ Packet out other info
          )
        , ( Signal dom Bool
          -- ^ Avalon op valid
@@ -46,7 +46,7 @@ packetReader
          )
        )
 
-packetReader pOutReady opReady res
+packetReader res pOutReady opReady
     = (resReady, pOut, op)
     where
         (resValid, resTag, resData) = res

@@ -15,13 +15,13 @@ import Avalon.ByteStreamToPacket
 scanEcho
     :: HiddenClockResetEnable dom
     => Signal dom (Maybe (Bool, Unsigned 8))
-       -- ^ Stream-in
+       -- ^ Stream in
     -> Signal dom Bool
        -- ^ RAM busy
     -> ( Signal dom (Maybe (Unsigned 11, Unsigned 8))
          -- ^ RAM write
        , Signal dom Bool
-         -- ^ Stream-in ready
+         -- ^ Stream in ready
        , Signal dom (Maybe (Unsigned 11))
          -- Send reply
        )
@@ -95,7 +95,7 @@ fakeReply
        , Signal dom (Unsigned 11)
          -- ^ RAM read address
        , Signal dom (Maybe (Bool, Unsigned 8))
-         -- ^ Stream-out
+         -- ^ Stream out
        )
 
 fakeReply sendReply readData
@@ -308,16 +308,16 @@ responder' _ f2hIn h2fIn
     where
         (f2hOut, f2hOpReady, f2hRes)
             = avalonMaster
-                f2hIn f2hResReady f2hOp
+                f2hIn f2hOp f2hResReady
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
-                h2fIn h2fResReady h2fOp
+                h2fIn h2fOp h2fResReady
 
         (h2fResReady, h2fPacket, h2fOp)
-            = packetReader h2fPacketReady h2fOpReady h2fRes
+            = packetReader h2fRes h2fPacketReady h2fOpReady
 
-        (f2hPacketReady, f2hOp) = packetWriter f2hOpReady f2hPacket
+        (f2hPacketReady, f2hOp) = packetWriter f2hPacket f2hOpReady
         f2hResReady = pure True
 
         (h2fPacketReady, sIn)

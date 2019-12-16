@@ -92,17 +92,18 @@ avalonPacketWriter' _ f2hIn h2fIn
                 ( (traceSignal1F "f2hRData" f2hRData)
                 , (traceSignal1F "f2hAck" f2hAck)
                 )
-                f2hResReady f2hOp
+                f2hOp f2hResReady
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
-                h2fIn h2fResReady h2fOp
+                h2fIn h2fOp h2fResReady
 
         h2fResReady = pure True
         h2fOp = ( pure False, pure undefined, pure ()
                 , pure (undefined :: Unsigned 6), pure undefined)
 
-        (pInReady, f2hOp) = packetWriter f2hOpReady pIn
+        (pInReady, f2hOp) = packetWriter pIn f2hOpReady
+
         f2hResReady = pure True
 
         pIn = writeDummyCounter pInReady
