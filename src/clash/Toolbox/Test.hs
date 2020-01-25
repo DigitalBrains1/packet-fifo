@@ -67,6 +67,7 @@ writeVCD fname slice signal traceNames = do
     case vcd of
         Left s  -> error s
         Right d -> TIO.writeFile fname d
+    putStrLn $ "Written file " P.++ fname
 
 {-
  - Shorthand for writeVCD with a slice of (0,2000)
@@ -157,6 +158,17 @@ backPresStimuliGenerator clk rst stim ready
  - Verified output is in the form of Maybe. Just values are compared to a list
  - of expected samples, Nothings are discarded.
  -}
+maybeOutputVerifier'
+    :: ( KnownDomain dom
+       , KnownNat n
+       , Eq a
+       , ShowX a
+       )
+    => Clock dom
+    -> Reset dom
+    -> Vec n a
+    -> Signal dom (Maybe a)
+    -> Signal dom Bool
 maybeOutputVerifier' clk rst samples
     = CEP.moore clk rst enableGen (movT samples) movO (0, False)
     where
