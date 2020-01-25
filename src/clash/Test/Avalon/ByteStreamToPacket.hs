@@ -3,8 +3,8 @@ module Test.Avalon.ByteStreamToPacket where
 import Clash.Prelude
 import Data.Maybe
 
-import qualified Data.Text.IO as TIO
 import Avalon.ByteStreamToPacket
+import Toolbox.Test
 
 streamGen
     :: HiddenClockResetEnable dom
@@ -49,18 +49,14 @@ mockTopEntity' = bundle packet
         stream' = streamGen streamReady
 
 makeVCD
-    = do
-        Right vcd <-
-            dumpVCD
-                (0,2000)
-                mockTopEntity
-                [ "packetValid"
-                , "packetData"
-                , "packetOther"
-                , "streamReady"
-                , "more"
-                , "sData"
-                ]
-        TIO.writeFile "avbs2p.vcd" vcd
+    = writeVCD' "avbs2p.vcd"
+        mockTopEntity
+        [ "packetValid"
+        , "packetData"
+        , "packetOther"
+        , "streamReady"
+        , "more"
+        , "sData"
+        ]
 
 main = makeVCD

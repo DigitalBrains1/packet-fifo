@@ -24,9 +24,9 @@ import Test.Avalon.PacketEcho.Common
                 , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
                 ]
         }) #-}
+{-# NOINLINE avalonPacketEcho #-}
 avalonPacketEcho clk rst_n
     = withClockResetEnable clk rstS enableGen
                            avalonPacketEchoXfm (.&. 0xff000000)
     where
         rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen
-{-# NOINLINE avalonPacketEcho #-}

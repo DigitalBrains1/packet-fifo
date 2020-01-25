@@ -1,0 +1,50 @@
+[*]
+[*] GTKWave Analyzer v3.3.98 (w)1999-2019 BSI
+[*] Sat Jan 25 12:57:39 2020
+[*]
+[dumpfile] "/home/peter/src/clash/packet-fifo/src/clash/avp2bs.vcd"
+[dumpfile_mtime] "Sat Jan 25 12:47:07 2020"
+[dumpfile_size] 29446
+[savefile] "/home/peter/src/clash/packet-fifo/src/clash/avp2bs.gtkw"
+[timestart] 14
+[size] 1920 1061
+[pos] -1 -1
+*-1.000000 14 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 211
+[signals_width] 200
+[sst_expanded] 1
+[sst_vpaned_height] 313
+@28
+logic.packetValid
+@22
+logic.packetData[31:0]
+@800122
+logic.packetOther[31:0]
+@800022
++{other-empty} #{other.empty} (25)logic.packetOther[31:0] (26)logic.packetOther[31:0] (27)logic.packetOther[31:0] (28)logic.packetOther[31:0] (29)logic.packetOther[31:0]
+@1001200
+-group_end
+@28
++{other-EOP} (30)logic.packetOther[31:0]
++{other-SOP} (31)logic.packetOther[31:0]
+@1001300
+-group_end
+@800122
+logic.stream[9:0]
+@29
++{stream-isJust} (0)logic.stream[9:0]
+@28
++{stream-more} (1)logic.stream[9:0]
+@800022
+#{stream-data} (2)logic.stream[9:0] (3)logic.stream[9:0] (4)logic.stream[9:0] (5)logic.stream[9:0] (6)logic.stream[9:0] (7)logic.stream[9:0] (8)logic.stream[9:0] (9)logic.stream[9:0]
+@1001200
+-group_end
+@1001300
+-group_end
+[pattern_trace] 1
+[pattern_trace] 0
+!100000@@
+?01
+@29
+logic.packetValid
+!!

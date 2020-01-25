@@ -21,11 +21,11 @@ import Avalon.Master
                 , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
                 ]
         }) #-}
+{-# NOINLINE avalonMasterReader #-}
 avalonMasterReader clk rst_n
     = exposeClockResetEnable avalonMasterReader' clk rstS enableGen
     where
         rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen
-{-# NOINLINE avalonMasterReader #-}
 
 avalonMasterReader'
     :: SystemClockResetEnable

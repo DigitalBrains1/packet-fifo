@@ -1,0 +1,46 @@
+[*]
+[*] GTKWave Analyzer v3.3.98 (w)1999-2019 BSI
+[*] Sat Jan 25 12:58:02 2020
+[*]
+[dumpfile] "/home/peter/src/clash/packet-fifo/src/clash/avbs2p.vcd"
+[dumpfile_mtime] "Sat Jan 25 12:09:22 2020"
+[dumpfile_size] 101614
+[savefile] "/home/peter/src/clash/packet-fifo/src/clash/avbs2p.gtkw"
+[timestart] 0
+[size] 1920 1061
+[pos] -1 -1
+*-1.000000 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 211
+[signals_width] 200
+[sst_expanded] 1
+[sst_vpaned_height] 302
+@29
+logic.packetValid
+@22
+logic.packetData[31:0]
+@800122
+logic.packetOther[31:0]
+@800022
++{other-empty} #{other.empty} (25)logic.packetOther[31:0] (26)logic.packetOther[31:0] (27)logic.packetOther[31:0] (28)logic.packetOther[31:0] (29)logic.packetOther[31:0]
+@1001200
+-group_end
+@28
++{other-EOP} (30)logic.packetOther[31:0]
++{other-SOP} (31)logic.packetOther[31:0]
+@200
+-
+@1001200
+-group_end
+@28
+logic.streamReady
+@22
+logic.sData[7:0]
+@28
+logic.more
+[pattern_trace] 1
+[pattern_trace] 0
+!100000@@
+?01
+@29
+logic.packetValid
+!!

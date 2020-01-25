@@ -25,11 +25,11 @@ import Avalon.ByteStreamToPacket
                 , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
                 ]
         }) #-}
+{-# NOINLINE avalonStreamEcho #-}
 avalonStreamEcho clk rst_n
     = withClockResetEnable clk rstS enableGen avalonStreamEcho'
     where
         rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen
-{-# NOINLINE avalonStreamEcho #-}
 
 avalonStreamEcho'
     :: SystemClockResetEnable

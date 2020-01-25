@@ -2,6 +2,8 @@ module Test.Avalon.Master.MockSlave where
 
 import Clash.Prelude
 
+import Toolbox.Test
+
 mockAvalonSlave
     :: ( HiddenClockResetEnable dom
        , KnownNat k)
@@ -25,5 +27,3 @@ mockAvalonSlave (addr, wdata, read, write, be)
         cntr 0 _     = maxBound
         cntr n True  = n - 1
         cntr n False = n
-
-seqXA = liftA2 seqX

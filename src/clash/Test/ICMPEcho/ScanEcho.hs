@@ -2,10 +2,10 @@ module Test.ICMPEcho.ScanEcho where
 
 import Clash.Prelude
 import Clash.Explicit.Testbench
-import qualified Prelude as P
 
 import ICMPEcho
 import Test.ICMPEcho.TestPackets
+import Toolbox.Test
 
 packetStimuli clk rst pkt
     = stimuliGenerator clk rst (map packetStimuli' (zip indicesI pkt))
@@ -42,10 +42,6 @@ testBench pkt isEcho = done
         rst = systemResetGen
         en = tbEnableGen
 
-runManyTBs tbs
-    = print $ P.head $ dropWhile id
-    $ P.map (P.head . dropWhile not . sample) tbs P.++ [False]
-
-main = runManyTBs ([ testBench $(listToVecTH echoReqPacket) True
-                   , testBench $(listToVecTH tcpSynPacket)  False
-                   ])
+main = runTBs ([ testBench $(listToVecTH echoReqPacket) True
+               , testBench $(listToVecTH tcpSynPacket)  False
+               ])

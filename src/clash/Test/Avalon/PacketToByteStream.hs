@@ -1,14 +1,12 @@
 module Test.Avalon.PacketToByteStream where
 
 import Clash.Prelude
-import qualified Data.Text.IO as TIO
+
 import Avalon.PacketToByteStream
 import Avalon.PacketReader
 import Avalon.Master
 import Test.Avalon.Master.MockSlave
-
--- traceSignal1F = flip const
-traceSignal1F = traceSignal1
+import Toolbox.Test
 
 mockTopEntity
     = withClockResetEnable clockGen resetGen enableGen mockTopEntity'
@@ -18,38 +16,34 @@ mockTopEntity'
     => Signal System (Maybe (Bool, Unsigned 8))
 
 mockTopEntity'
-    = traceSignal1F "stream" stream
+    = traceSignal1 "stream" stream
     where
-        packet = (packetValid, packetData, packetOther)
-        packetValid = traceSignal1F "packetValid" packetValid'
-        packetData = traceSignal1F "packetData" packetData'
-        packetOther = traceSignal1F "packetOther" packetOther'
-        (packetValid', packetData', packetOther') = packet'
+        (packetValid, packetData, packetOther) = packet
+        packetValid' = traceSignal1 "packetValid" packetValid
+        packetData' = traceSignal1 "packetData" packetData
+        packetOther' = traceSignal1 "packetOther" packetOther
+        packet' = (packetValid', packetData', packetOther')
 
         (h2fOut, h2fOpReady, h2fRes)
             = avalonMaster
                 h2fIn h2fOp h2fResReady
 
-        (h2fResReady, packet', h2fOp)
+        (h2fResReady, packet, h2fOp)
             = packetReader h2fRes (pure True) h2fOpReady
 
         (packetReady, stream)
-            = packetToByteStream packet streamReady
+            = packetToByteStream packet' streamReady
 
         streamReady = pure True
         h2fIn
             = mockAvalonSlave h2fOut
 
 makeVCD
-    = do
-        Right vcd <-
-            dumpVCD
-                (0,2000)
-                mockTopEntity
-                [ "stream"
-                , "packetData"
-                , "packetOther"
-                ]
-        TIO.writeFile "avp2bs.vcd" vcd
+    = writeVCD' "avp2bs.vcd"
+        mockTopEntity
+        [ "stream"
+        , "packetData"
+        , "packetOther"
+        ]
 
 main = makeVCD

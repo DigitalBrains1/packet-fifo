@@ -6,9 +6,7 @@ import qualified Data.Text.IO as TIO
 import Avalon.PacketWriter
 import Avalon.Master
 import Test.Avalon.Master.MockSlave
-
--- traceSignal1F = flip const
-traceSignal1F = traceSignal1
+import Toolbox.Test
 
 {-# ANN avalonPacketWriter
     (Synthesize
@@ -27,11 +25,11 @@ traceSignal1F = traceSignal1
                 , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
                 ]
         }) #-}
+{-# NOINLINE avalonPacketWriter #-}
 avalonPacketWriter clk rst_n
     = exposeClockResetEnable avalonPacketWriter' clk rstS enableGen
     where
         rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen
-{-# NOINLINE avalonPacketWriter #-}
 
 avalonPacketWriter'
     :: SystemClockResetEnable
@@ -75,11 +73,11 @@ avalonPacketWriter'
 
 avalonPacketWriter' _ f2hIn h2fIn
     = ( pure 0
-      , ( traceSignal1F "f2hAddr" f2hAddr
-        , traceSignal1F "f2hWData" f2hWData
-        , traceSignal1F "f2hRead" f2hRead
-        , traceSignal1F "f2hWrite" f2hWrite
-        , traceSignal1F "f2hBE" f2hBE
+      , ( traceSignal1 "f2hAddr" f2hAddr
+        , traceSignal1 "f2hWData" f2hWData
+        , traceSignal1 "f2hRead" f2hRead
+        , traceSignal1 "f2hWrite" f2hWrite
+        , traceSignal1 "f2hBE" f2hBE
         )
       , h2fOut
       )
@@ -89,8 +87,8 @@ avalonPacketWriter' _ f2hIn h2fIn
 
         (f2hOut, f2hOpReady, f2hRes)
             = avalonMaster
-                ( (traceSignal1F "f2hRData" f2hRData)
-                , (traceSignal1F "f2hAck" f2hAck)
+                ( (traceSignal1 "f2hRData" f2hRData)
+                , (traceSignal1 "f2hAck" f2hAck)
                 )
                 f2hOp f2hResReady
 
@@ -147,17 +145,13 @@ mockTopEntity = f2hAck
                 mockAvalonSlave f2hOut
 
 makeVCD
-    = do
-        Right vcd <-
-            dumpVCD
-                (0,2000)
-                mockTopEntity
-                [ "f2hAddr"
-                , "f2hWData"
-                , "f2hRead"
-                , "f2hWrite"
-                , "f2hBE"
-                , "f2hRData"
-                , "f2hAck"
-                ]
-        TIO.writeFile "avpw.vcd" vcd
+    = writeVCD' "avpw.vcd"
+        mockTopEntity
+        [ "f2hAddr"
+        , "f2hWData"
+        , "f2hRead"
+        , "f2hWrite"
+        , "f2hBE"
+        , "f2hRData"
+        , "f2hAck"
+        ]

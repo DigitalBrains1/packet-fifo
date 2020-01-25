@@ -3,8 +3,6 @@ module ICMPEcho where
 import Clash.Prelude
 import qualified Clash.Explicit.Prelude as CEP
 import Data.Maybe
-import Debug.Trace (trace)
-import qualified Prelude as P
 
 import Avalon.Master
 import Avalon.PacketReader
@@ -216,6 +214,7 @@ responderStream' clk rst en sIn sOutReady = (sInReady, sOut)
                 , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
                 ]
         }) #-}
+{-# NOINLINE responder #-}
 responder
     :: Clock System
     -> Signal System Bool
@@ -261,7 +260,6 @@ responder clk rst_n
     = withClockResetEnable clk rstS enableGen responder'
     where
         rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen
-{-# NOINLINE responder #-}
 
 responder'
     :: SystemClockResetEnable
