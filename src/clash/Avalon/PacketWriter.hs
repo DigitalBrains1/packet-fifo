@@ -52,11 +52,11 @@ packetWriter pIn opReady = (pInReady, op)
         (opAddr, opData) = unbundle $ seq2op <$> sequence <*> dataReg
                                              <*> otherReg
 
-        sequence = mealy seqT (0 :: Index 3) (pInTransfer .||. opTransfer)
+        sequence = moore seqT id (0 :: Index 3) (pInTransfer .||. opTransfer)
 
-        seqT s False                 = (s, s)
-        seqT s True  | s == maxBound = (minBound, s)
-                     | otherwise     = (s+1, s)
+        seqT s False                 = s
+        seqT s True  | s == maxBound = minBound
+                     | otherwise     = s+1
 
         seq2op 0 d o = (undefined, undefined)
         seq2op 1 d o = (fifoOtherInfoReg, o)
