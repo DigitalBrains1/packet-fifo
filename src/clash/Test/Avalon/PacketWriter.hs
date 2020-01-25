@@ -7,8 +7,8 @@ import Avalon.PacketWriter
 import Avalon.Master
 import Test.Avalon.Master.MockSlave
 
-traceSignal1F = flip const
--- traceSignal1F = traceSignal1
+-- traceSignal1F = flip const
+traceSignal1F = traceSignal1
 
 {-# ANN avalonPacketWriter
     (Synthesize
@@ -152,6 +152,12 @@ makeVCD
             dumpVCD
                 (0,2000)
                 mockTopEntity
-                [ "f2hAck", "f2hWrite", "f2hWData"
+                [ "f2hAddr"
+                , "f2hWData"
+                , "f2hRead"
+                , "f2hWrite"
+                , "f2hBE"
+                , "f2hRData"
+                , "f2hAck"
                 ]
         TIO.writeFile "avpw.vcd" vcd

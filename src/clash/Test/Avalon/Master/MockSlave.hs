@@ -16,8 +16,8 @@ mockAvalonSlave
        )
 
 mockAvalonSlave (addr, wdata, read, write, be)
-    = addr `seq` wdata `seq` read `seq` write `seq` be `seq`
-      (pure 0x12345672, ack)
+    = ( pure 0x12345672
+      , addr `seqXA` wdata `seqXA` read `seqXA` write `seqXA` be `seqXA` ack)
     where
         ack = moore cntr (== 0) (maxBound :: Index 3)
                     (read .||. write)
@@ -25,3 +25,5 @@ mockAvalonSlave (addr, wdata, read, write, be)
         cntr 0 _     = maxBound
         cntr n True  = n - 1
         cntr n False = n
+
+seqXA = liftA2 seqX
