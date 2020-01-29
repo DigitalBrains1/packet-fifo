@@ -72,29 +72,13 @@ avalonPacketWriter'
        )
 
 avalonPacketWriter' _ f2hIn h2fIn
-    = ( pure 0
-      , ( traceSignal1 "f2hAddr" f2hAddr
-        , traceSignal1 "f2hWData" f2hWData
-        , traceSignal1 "f2hRead" f2hRead
-        , traceSignal1 "f2hWrite" f2hWrite
-        , traceSignal1 "f2hBE" f2hBE
-        )
-      , h2fOut
-      )
+    = (pure 0, f2hOut , h2fOut)
     where
-        (f2hRData, f2hAck) = f2hIn
-        (f2hAddr, f2hWData, f2hRead, f2hWrite, f2hBE) = f2hOut
-
         (f2hOut, f2hOpReady, f2hRes)
-            = avalonMaster
-                ( (traceSignal1 "f2hRData" f2hRData)
-                , (traceSignal1 "f2hAck" f2hAck)
-                )
-                f2hOp f2hResReady
+            = avalonMaster f2hIn f2hOp f2hResReady
 
         (h2fOut, h2fOpReady, h2fRes)
-            = avalonMaster
-                h2fIn h2fOp h2fResReady
+            = avalonMaster h2fIn h2fOp h2fResReady
 
         h2fResReady = pure True
         h2fOp = ( pure False, pure undefined, pure ()
@@ -130,19 +114,28 @@ writeDummyCounter' cnt pInReady
 mockTopEntity
     :: Signal System Bool
 
-mockTopEntity = f2hAck
+mockTopEntity = f2hRData' `seqXA` f2hAck'
     where
-
         (f2hRData, f2hAck) = f2hIn
+        f2hRData' = traceSignal1 "f2hRData" f2hRData
+        f2hAck' = traceSignal1 "f2hAck" f2hAck
 
         (_, f2hOut, _)
             = avalonPacketWriter
                 clockGen (pure True) (pure 0b111) f2hIn
                 (pure undefined, pure False)
+
+        (f2hAddr, f2hWData, f2hRead, f2hWrite, f2hBE) = f2hOut
+        f2hAddr' = traceSignal1 "f2hAddr" f2hAddr
+        f2hWData' = traceSignal1 "f2hWData" f2hWData
+        f2hRead' = traceSignal1 "f2hRead" f2hRead
+        f2hWrite' = traceSignal1 "f2hWrite" f2hWrite
+        f2hBE' = traceSignal1 "f2hBE" f2hBE
+        f2hOut' = (f2hAddr', f2hWData', f2hRead', f2hWrite', f2hBE')
         f2hIn
             = withClockResetEnable
                 clockGen resetGen enableGen
-                mockAvalonSlave d3 f2hOut
+                mockAvalonSlave d3 f2hOut'
 
 makeVCD
     = writeVCD' "avpw.vcd"
