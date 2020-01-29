@@ -142,7 +142,7 @@ mockTopEntity = f2hAck
         f2hIn
             = withClockResetEnable
                 clockGen resetGen enableGen
-                mockAvalonSlave f2hOut
+                mockAvalonSlave d3 f2hOut
 
 makeVCD
     = writeVCD' "avpw.vcd"

@@ -36,7 +36,7 @@ mockTopEntity'
 
         streamReady = pure True
         h2fIn
-            = mockAvalonSlave h2fOut
+            = mockAvalonSlave d3 h2fOut
 
 makeVCD
     = writeVCD' "avp2bs.vcd"

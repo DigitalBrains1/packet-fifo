@@ -43,7 +43,7 @@ mockTopEntity'
             = packetReader h2fRes (pure True) h2fOpReady
 
         h2fIn'
-            = mockAvalonSlave h2fOut
+            = mockAvalonSlave d3 h2fOut
 
 makeVCD
     = writeVCD' "avpr.vcd"
