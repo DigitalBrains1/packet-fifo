@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include "mmio.h"
+#include "avalon-fifo.h"
 #include "packet-fifo.h"
 
 size_t
