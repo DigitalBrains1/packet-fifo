@@ -5,8 +5,8 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include "mmio.h"
-#include "avalon-fifo.h"
-#include "packet-fifo.h"
+#include "avalon_fifo.h"
+#include "packet_fifo.h"
 
 size_t
 rdfifo_ctx_size()

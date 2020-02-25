@@ -24,7 +24,7 @@
 #include "socal/alt_gpio.h"
 #include "hps_0.h"
 #include "mmio.h"
-#include "packet-fifo.h"
+#include "packet_fifo.h"
 
 #define HW_REGS_BASE ( ALT_STM_OFST )
 #define HW_REGS_SPAN ( 0x04000000 )

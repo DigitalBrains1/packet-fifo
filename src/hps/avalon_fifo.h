@@ -1,6 +1,8 @@
 #ifndef FILE_AVALON_FIFO_H
 #define FILE_AVALON_FIFO_H
 
+/* Based on Intel's altera_avalon_fifo_regs.h */
+
 #define FIFO_DATA_REG		0
 #define FIFO_OTHER_INFO_REG	4
 

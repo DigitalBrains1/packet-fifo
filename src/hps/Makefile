@@ -15,9 +15,9 @@ all: upload
 upload: fpgaeth test-fifo
 	rsync -a --no-g --no-o $^ root@de10:packet-fifo/
 
-fpgaeth: fpgaeth.o packet-fifo.o
+fpgaeth: fpgaeth.o packet_fifo.o
 
-test-fifo: test-fifo.o packet-fifo.o
+test-fifo: test-fifo.o packet_fifo.o
 
 %.o.lst: %.o
 #	$(OBJDUMP) -rtdg $< >$@
