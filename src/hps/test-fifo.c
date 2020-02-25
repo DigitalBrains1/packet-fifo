@@ -40,8 +40,10 @@ int
 main()
 {
 	void *virtual_base;
-	int res;
-	int fd;
+	int res, ret;
+	int fdm, fdu, fdmax;
+	fd_set fds;
+	struct timeval zero_time = { 0, 0 };
 	int loop_count;
 	int led_direction;
 	int led_mask;
@@ -50,19 +52,20 @@ main()
 	void *fifo_f2h_base, *fifo_f2h_csr_base, *fifo_h2f_base;
 	struct rdfifo_ctx *fifo_f2h_ctx;
 	uint32_t id, tmp;
+	ssize_t len;
 	uint8_t outbuf[2048];
 
-	if ((fd=open("/dev/mem", (O_RDWR | O_SYNC))) == -1) {
+	if ((fdm=open("/dev/mem", (O_RDWR | O_SYNC))) == -1) {
 		perror("Could not open /dev/mem");
 		return 1;
 	}
 
 	virtual_base = mmap(NULL, HW_REGS_SPAN, (PROT_READ | PROT_WRITE),
-			MAP_SHARED, fd, HW_REGS_BASE);
+			MAP_SHARED, fdm, HW_REGS_BASE);
 
 	if (virtual_base == MAP_FAILED) {
 		perror("mmap() failed");
-		close(fd);
+		close(fdm);
 		return 1;
 	}
 
@@ -79,19 +82,56 @@ main()
 	fifo_h2f_base = addr_offset_mask(virtual_base,
 			ALT_LWFPGASLVS_OFST + FIFO_H2F_IN_BASE,HW_REGS_MASK);
 
+	if ((fdu=open("/dev/uio0", O_RDWR)) == -1) {
+		perror("Could not open /dev/uio0");
+		return 1;
+	}
+	fifo_f2h_csr_base = mmap(NULL, 32, (PROT_READ | PROT_WRITE), MAP_SHARED, fdu, 0);
+	if (fifo_f2h_csr_base == MAP_FAILED) {
+		perror("mmap() failed");
+		return 1;
+	}
+
+	fdmax = fdu + 1;
+
 	id = mmio_read32(h2p_sysid_addr, 0);
 	printf("%#010x\n", id);
 
 	fifo_f2h_ctx = malloc(rdfifo_ctx_size());
 	init_rdfifo(fifo_f2h_ctx, fifo_f2h_base, fifo_f2h_csr_base);
 
+	mmio_write32(fifo_f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
+	mmio_write32(fifo_f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
+	/* Flush FIFO */
+	for (uint32_t i = mmio_read32(fifo_f2h_csr_base, FIFO_LEVEL_REG);
+			i > 0; i--)
+		tmp = mmio_read32(fifo_f2h_base, FIFO_DATA_REG);
+
+	mmio_write32(fifo_f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
+	mmio_write32(fifo_f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
 	tmp = 0x12345678;
 	for (size_t i = 0; i < 1024; i += 4) {
 		memcpy(&outbuf[i], &tmp, 4);
 		tmp += 0x1;
 	}
 
-	fifo_write(fifo_h2f_base, outbuf, 17);
+
+	for (int i = 1; i < 1024; i++) {
+		printf("%d\n", i);
+		fifo_write(fifo_h2f_base, outbuf, 4);
+		FD_ZERO(&fds);
+		FD_SET(fdu, &fds);
+		select(fdmax, &fds, NULL, NULL, &zero_time);
+		if (FD_ISSET(fdu, &fds)) {
+			len = read(fdu, &tmp, 4);
+			if (len != 4)
+				printf("Short read on uio0: %d bytes\n", len);
+			printf("Interrupt occurred! %u\n", tmp);
+			mmio_write32(fifo_f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
+			mmio_write32(fifo_f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
+		}
+	}
+
 	while((res = fifo_read(fifo_f2h_ctx)) == FIFO_NEED_MORE) {}
 	if (res == 0) {
 		uint32_t *p;
@@ -126,12 +166,16 @@ main()
 		}
 	}
 
-	// clean up our memory mapping and exit
+	ret = 0;
 	if (munmap(virtual_base, HW_REGS_SPAN) != 0 ) {
 		perror("munmap() failed");
-		close(fd);
-		return 1;
+		ret = 1;
 	}
-	close(fd);
-	return 0;
+	if (munmap(fifo_f2h_csr_base , 32) != 0 ) {
+		perror("munmap() failed");
+		ret = 1;
+	}
+	close(fdm);
+	close(fdu);
+	return ret;
 }

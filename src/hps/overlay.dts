@@ -1,0 +1,125 @@
+/dts-v1/ /plugin/;
+
+/ {
+	compatible = "altr,socfpga-cyclone5";
+
+	fragment@0 {
+		target-path = "/soc";
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			hps_0_bridges: bridge@0xc0000000 {
+				compatible = "altr,bridge-18.1", "simple-bus";
+				reg = <0xc0000000 0x20000000>,
+					<0xff200000 0x00200000>;
+				reg-names = "axi_h2f", "axi_h2f_lw";
+				#address-cells = <2>;
+				#size-cells = <1>;
+				ranges = <0x00000001 0x00000000 0xff200000 0x00100000>;
+
+				mm_bridge_0: bridge@0x100000000 {
+					compatible = "altr,avalon-18.1", "simple-bus";
+					reg = <0x00000001 0x00000000 0x00100000>;
+					#address-cells = <1>;
+					#size-cells = <1>;
+					ranges = <0x00020000 0x00000001 0x00020000 0x00000008>,
+						<0x00030000 0x00000001 0x00030000 0x00000100>,
+						<0x00001000 0x00000001 0x00001000 0x00000008>,
+						<0x00060000 0x00000001 0x00060000 0x00000008>,
+						<0x00080000 0x00000001 0x00080000 0x00000020>,
+						<0x00070000 0x00000001 0x00070000 0x00000008>,
+						<0x00005000 0x00000001 0x00005000 0x00000010>,
+						<0x00004000 0x00000001 0x00004000 0x00000010>,
+						<0x00003000 0x00000001 0x00003000 0x00000010>;
+
+					jtag_uart: serial@0x20000 {
+						compatible = "altr,juart-18.1", "altr,juart-1.0";
+						reg = <0x00020000 0x00000008>;
+						interrupt-parent = <&intc>;
+						interrupts = <0 42 4>;
+					}; //end serial@0x20000 (jtag_uart)
+
+					ILC: ilc@0x30000 {
+						compatible = "altr,altera_ilc-18.1", "altr,ilc-1.0";
+						reg = <0x00030000 0x00000100>;
+						interrupt-parent = <&intc>;
+						interrupts = <0 42 4 0 41 1 0 40 1>;
+						interrupt-names = "jtag_uart", "button_pio", "dipsw_pio";
+						interrupt-controller;
+						#interrupt-cells = <1>;
+						altr,sw-fifo-depth = <32>;	/* embeddedsw.dts.params.altr,sw-fifo-depth type NUMBER */
+					}; //end ilc@0x30000 (ILC)
+
+					sysid_qsys: sysid@0x1000 {
+						compatible = "altr,sysid-18.1", "altr,sysid-1.0";
+						reg = <0x00001000 0x00000008>;
+						id = <2899645186>;	/* embeddedsw.dts.params.id type NUMBER */
+						timestamp = <1572356426>;	/* embeddedsw.dts.params.timestamp type NUMBER */
+					}; //end sysid@0x1000 (sysid_qsys)
+
+					fifo_h2f_in: fifo@0x60000 {
+						compatible = "altr,fifo-18.1", "altr,fifo-1.0";
+						reg = <0x00060000 0x00000008>;
+					}; //end fifo@0x60000 (fifo_h2f_in)
+
+					fifo_f2h_out: fifo@0x80000 {
+						compatible = "altr,fifo-18.1", "altr,fifo-1.0";
+						reg = <0x00070000 0x00000008>,
+							<0x00080000 0x00000020>;
+						reg-names = "out", "in_csr";
+						interrupt-parent = <&intc>;
+						interrupts = <0 43 4>;
+					}; //end fifo@0x80000 (fifo_f2h_out)
+
+					button_pio: gpio@0x5000 {
+						compatible = "altr,pio-18.1", "altr,pio-1.0";
+						reg = <0x00005000 0x00000010>;
+						interrupt-parent = <&intc>;
+						interrupts = <0 41 1>;
+						altr,gpio-bank-width = <4>;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
+						altr,interrupt-type = <2>;	/* embeddedsw.dts.params.altr,interrupt-type type NUMBER */
+						altr,interrupt_type = <2>;	/* embeddedsw.dts.params.altr,interrupt_type type NUMBER */
+						edge_type = <1>;	/* embeddedsw.dts.params.edge_type type NUMBER */
+						level_trigger = <0>;	/* embeddedsw.dts.params.level_trigger type NUMBER */
+						resetvalue = <0>;	/* embeddedsw.dts.params.resetvalue type NUMBER */
+						#gpio-cells = <2>;
+						gpio-controller;
+					}; //end gpio@0x5000 (button_pio)
+
+					dipsw_pio: gpio@0x4000 {
+						compatible = "altr,pio-18.1", "altr,pio-1.0";
+						reg = <0x00004000 0x00000010>;
+						interrupt-parent = <&intc>;
+						interrupts = <0 40 1>;
+						altr,gpio-bank-width = <10>;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
+						altr,interrupt-type = <3>;	/* embeddedsw.dts.params.altr,interrupt-type type NUMBER */
+						altr,interrupt_type = <3>;	/* embeddedsw.dts.params.altr,interrupt_type type NUMBER */
+						edge_type = <2>;	/* embeddedsw.dts.params.edge_type type NUMBER */
+						level_trigger = <0>;	/* embeddedsw.dts.params.level_trigger type NUMBER */
+						resetvalue = <0>;	/* embeddedsw.dts.params.resetvalue type NUMBER */
+						#gpio-cells = <2>;
+						gpio-controller;
+					}; //end gpio@0x4000 (dipsw_pio)
+
+					led_pio: gpio@0x3000 {
+						compatible = "altr,pio-18.1", "altr,pio-1.0";
+						reg = <0x00003000 0x00000010>;
+						altr,gpio-bank-width = <10>;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
+						resetvalue = <0>;	/* embeddedsw.dts.params.resetvalue type NUMBER */
+						#gpio-cells = <2>;
+						gpio-controller;
+					}; //end gpio@0x3000 (led_pio)
+				}; //end bridge@0x100000000 (mm_bridge_0)
+			}; //end bridge@0xc0000000 (hps_0_bridges)
+		};
+	};
+
+	fragment@1 {
+		target-path="/aliases";
+		__overlay__ {
+			fifo-h2f0 = "/soc/bridge@0xc0000000/bridge@0x100000000/fifo@0x60000";
+			fifo-f2h0 = "/soc/bridge@0xc0000000/bridge@0x100000000/fifo@0x80000";
+		};
+	};
+};

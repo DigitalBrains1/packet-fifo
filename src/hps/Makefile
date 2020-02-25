@@ -30,6 +30,9 @@ test-fifo: test-fifo.o packet_fifo.o
 %.c.s: %.c
 	$(CC) $(CFLAGS) -S -o $@ $<
 
+%.dtb: %.dts
+	dtc -@ -o $@ $<
+
 .PHONY: clean
 clean:
-	rm -f fpgaeth test-fifo *.o *.o.lst *.c.i *.c.s
+	rm -f fpgaeth test-fifo overlay.dtb *.o *.o.lst *.c.i *.c.s

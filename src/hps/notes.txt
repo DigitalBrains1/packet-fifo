@@ -1,0 +1,3 @@
+Right now, when making the overlay file, interrupt-parent is renamed to
+match. But the whole property is probably superfluous as it is set in a
+parent already.

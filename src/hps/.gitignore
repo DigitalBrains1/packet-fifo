@@ -1,6 +1,7 @@
 /test-fifo
 /fpgaeth
 /tapping/tapping
+*.dtb
 *.o
 *.o.lst
 *.c.i
