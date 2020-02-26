@@ -18,6 +18,8 @@ rdfifo_ctx {
 #define FIFO_EVENT_ERROR (-3)
 #define FIFO_OVERLONG_ERROR (-4)
 
+struct uio_info_t *
+fifo_uio_by_of_name(const struct uio_info_t *info, const char *of_name);
 extern size_t
 rdfifo_ctx_size();
 extern int

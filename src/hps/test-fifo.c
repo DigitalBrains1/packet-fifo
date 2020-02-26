@@ -17,6 +17,7 @@
 #include "mmio.h"
 #include "avalon_fifo.h"
 #include "packet_fifo.h"
+#include "uio_helper.h"
 
 #define HW_REGS_BASE ( ALT_STM_OFST )
 #define HW_REGS_SPAN ( 0x04000000 )
@@ -51,6 +52,8 @@ main()
 	void *h2p_sysid_addr;
 	void *fifo_f2h_base, *fifo_f2h_csr_base, *fifo_h2f_base;
 	struct rdfifo_ctx *fifo_f2h_ctx;
+	struct uio_info_t *uio_list, *uio_f2h, *uio;
+	char uio_dev_n[16];
 	uint32_t id, tmp;
 	ssize_t len;
 	uint8_t outbuf[2048];
@@ -82,8 +85,34 @@ main()
 	fifo_h2f_base = addr_offset_mask(virtual_base,
 			ALT_LWFPGASLVS_OFST + FIFO_H2F_IN_BASE,HW_REGS_MASK);
 
-	if ((fdu=open("/dev/uio0", O_RDWR)) == -1) {
-		perror("Could not open /dev/uio0");
+	uio_list = uio_find_devices(-1);
+	if (!uio_list) {
+		fprintf(stderr, "Could not find uio devices.\n");
+		return 1;
+	}
+	uio = uio_list;
+	while (uio) {
+		uio_get_all_info(uio);
+		uio_get_device_attributes(uio);
+		uio = uio->next;
+	};
+
+	uio_f2h = fifo_uio_by_of_name(uio_list, "fifo-f2h0");
+	if (!uio_f2h) {
+		fprintf(stderr, "Could not find fifo-f2h0 uio.\n");
+		return 1;
+	}
+	if (fifo_uio_by_of_name(uio_list, "/soc/bridge@0xc0000000/bridge@0x100000000/fifo@0x80000") != uio_f2h) {
+		fprintf(stderr, "Got different uio for full name.\n");
+		return 1;
+	}
+	sprintf(uio_dev_n, "/dev/uio%d", uio_f2h->uio_num);
+	printf("fifo-f2h is %s\n", uio_dev_n);
+	uio_free_info(uio_list);
+
+	if ((fdu=open(uio_dev_n, O_RDWR)) == -1) {
+		fprintf(stderr, "Could not open %s: ", uio_dev_n);
+		perror(NULL);
 		return 1;
 	}
 	fifo_f2h_csr_base = mmap(NULL, 32, (PROT_READ | PROT_WRITE), MAP_SHARED, fdu, 0);
@@ -107,8 +136,6 @@ main()
 			i > 0; i--)
 		tmp = mmio_read32(fifo_f2h_base, FIFO_DATA_REG);
 
-	mmio_write32(fifo_f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
-	mmio_write32(fifo_f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
 	tmp = 0x12345678;
 	for (size_t i = 0; i < 1024; i += 4) {
 		memcpy(&outbuf[i], &tmp, 4);
