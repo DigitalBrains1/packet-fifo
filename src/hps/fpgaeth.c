@@ -152,8 +152,7 @@ main(int argc, char *argv[])
 	id = mmio_read32(h2p_sysid_addr, 0);
 	printf("%#010x\n", id);
 
-	fifo_f2h_ctx = malloc(rdfifo_ctx_size());
-	if ((res = init_rdfifo(fifo_f2h_ctx, uio_f2h)) != 0) {
+	if ((res = init_rdfifo(&fifo_f2h_ctx, uio_f2h, 2048)) != 0) {
 		fprintf(stderr, "init_rdfifo error %d\n", res);
 		return 1;
 	}

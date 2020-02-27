@@ -19,9 +19,10 @@ rdfifo_ctx {
 	size_t next;
 	size_t bufsize;
 	size_t word_cnt;
-	uint32_t buf[512];
+	uint32_t buf[];
 };
 
+#define FIFO_GENERAL_ERROR (-1)
 #define FIFO_NEED_MORE (-2)
 #define FIFO_EVENT_ERROR (-3)
 #define FIFO_OVERLONG_ERROR (-4)
@@ -29,10 +30,11 @@ rdfifo_ctx {
 
 struct uio_info_t *
 fifo_uio_by_of_name(const struct uio_info_t *info, const char *of_name);
-extern size_t
-rdfifo_ctx_size();
 extern int
-init_rdfifo(struct rdfifo_ctx *ctx, const struct uio_info_t *info);
+init_rdfifo(struct rdfifo_ctx **ctx, const struct uio_info_t *info,
+		size_t maxpkt);
+extern void
+close_rdfifo(struct rdfifo_ctx *ctx);
 extern int
 fifo_read(struct rdfifo_ctx *ctx);
 extern void
