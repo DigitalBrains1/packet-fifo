@@ -4,9 +4,17 @@
 #include <stdint.h>
 
 struct
+fifo_mapped_reg {
+	void *map_base;
+	size_t size;
+	void *reg_base;
+};
+
+struct
 rdfifo_ctx {
-	void *base;
-	void *csr_base;
+	struct fifo_mapped_reg out;
+	struct fifo_mapped_reg csr;
+	int uio_fd;
 	size_t numbytes;
 	size_t next;
 	size_t bufsize;
@@ -17,13 +25,14 @@ rdfifo_ctx {
 #define FIFO_NEED_MORE (-2)
 #define FIFO_EVENT_ERROR (-3)
 #define FIFO_OVERLONG_ERROR (-4)
+#define FIFO_DEV_ERROR (-5)
 
 struct uio_info_t *
 fifo_uio_by_of_name(const struct uio_info_t *info, const char *of_name);
 extern size_t
 rdfifo_ctx_size();
 extern int
-init_rdfifo(struct rdfifo_ctx *ctx, void *base, void *csr_base);
+init_rdfifo(struct rdfifo_ctx *ctx, const struct uio_info_t *info);
 extern int
 fifo_read(struct rdfifo_ctx *ctx);
 extern void

@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <sys/mman.h>
 #include "mmio.h"
 #include "avalon_fifo.h"
 #include "packet_fifo.h"
@@ -76,30 +78,73 @@ rdfifo_ctx_size()
 }
 
 int
-init_rdfifo(struct rdfifo_ctx *ctx, void *base, void *csr_base)
+init_rdfifo(struct rdfifo_ctx *ctx, const struct uio_info_t *info)
 {
-	ctx->base = base;
-	ctx->csr_base = csr_base;
+	char uio_dev_n[16];
+	const char *csr_name;
+	int ret;
+	size_t i;
+
+	ret=FIFO_DEV_ERROR;
+	if (!strcmp(info->name, "altera_fifo_in_irq"))
+		csr_name = "in_csr";
+	else if (!strcmp(info->name, "altera_fifo_out_irq"))
+		csr_name = "out_csr";
+	else
+		goto init_rd_out_err;
+
+	sprintf(uio_dev_n, "/dev/uio%d", info->uio_num);
+	if ((ctx->uio_fd=open(uio_dev_n, O_RDWR)) == -1)
+		goto init_rd_out_err;
+
+	for (i = 0; i < MAX_UIO_MAPS; i++)
+		if (!strcmp(info->maps[i].name, "out"))
+			break;
+	if (i == MAX_UIO_MAPS)
+		goto init_rd_out_close;
+	ctx->out.map_base = mmap(NULL, info->maps[i].size,
+			(PROT_READ | PROT_WRITE), MAP_SHARED, ctx->uio_fd,
+			i * getpagesize());
+	if (ctx->out.map_base == MAP_FAILED)
+		goto init_rd_out_close;
+	ctx->out.size = info->maps[i].size;
+	ctx->out.reg_base = addr_offset(ctx->out.map_base,
+			info->maps[i].offset);
+
+	for (i = 0; i < MAX_UIO_MAPS; i++)
+		if (!strcmp(info->maps[i].name, csr_name))
+			break;
+	if (i == MAX_UIO_MAPS)
+		goto init_rd_out_mmap1;
+	ctx->csr.map_base = mmap(NULL, info->maps[i].size,
+			(PROT_READ | PROT_WRITE), MAP_SHARED, ctx->uio_fd,
+			i * getpagesize());
+	if (ctx->csr.map_base == MAP_FAILED)
+		goto init_rd_out_mmap1;
+	ctx->csr.size = info->maps[i].size;
+	ctx->csr.reg_base = addr_offset(ctx->csr.map_base,
+			info->maps[i].offset);
+
 	ctx->next = 0;
 	ctx->bufsize = 512;
 	ctx->word_cnt = 0;
-#if 0
-	/* Flush FIFO */
-	for (uint32_t i = mmio_read32(csr_base, FIFO_LEVEL_REG); i > 0; i--) {
-		uint32_t tmp;
-		tmp = mmio_read32(base, FIFO_DATA_REG);
-		ctx->word_cnt++;
-		printf("Init flush read fifo, read: %6d %#010x\n",
-				ctx->word_cnt, tmp);
-	}
-#endif
-	/* Clear events */
-	mmio_write32(csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
-	if ((mmio_read32(csr_base, FIFO_EVENT_REG) & FIFO_EVENT_ALL) != 0) {
-		return FIFO_EVENT_ERROR;
-	}
+	mmio_write32(ctx->csr.reg_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
 
 	return 0;
+init_rd_out_mmap1:
+	munmap(ctx->out.map_base, ctx->out.size);
+init_rd_out_close:
+	close(ctx->uio_fd);
+init_rd_out_err:
+	return ret;
+}
+
+void
+close_rdfifo(struct rdfifo_ctx *ctx)
+{
+	munmap(ctx->csr.map_base, ctx->csr.size);
+	munmap(ctx->out.map_base, ctx->out.size);
+	close(ctx->uio_fd);
 }
 
 int
@@ -108,25 +153,23 @@ fifo_read(struct rdfifo_ctx *ctx)
 	uint32_t tmp, num_elems;
 	uint32_t other = 0;
 
-	num_elems = mmio_read32(ctx->csr_base, FIFO_LEVEL_REG);
+	num_elems = mmio_read32(ctx->csr.reg_base, FIFO_LEVEL_REG);
 	if (num_elems == 0)
 		return FIFO_NEED_MORE;
-	tmp = mmio_read32(ctx->base, FIFO_DATA_REG);
-	other = mmio_read32(ctx->base, FIFO_OTHER_INFO_REG);
+	tmp = mmio_read32(ctx->out.reg_base, FIFO_DATA_REG);
+	other = mmio_read32(ctx->out.reg_base, FIFO_OTHER_INFO_REG);
 	ctx->word_cnt++;
 	num_elems--;
 
 	if (ctx->next == 0) {
 		/* Flush until start of packet */
 		while (!(other & FIFO_INFO_SOP) && (num_elems != 0)) {
-			printf("Interpacket flush read fifo, read: "
-					"%6d %#010x\n", ctx->word_cnt, tmp);
-			tmp = mmio_read32(ctx->base, FIFO_DATA_REG);
-			other = mmio_read32(ctx->base,
+			tmp = mmio_read32(ctx->out.reg_base, FIFO_DATA_REG);
+			other = mmio_read32(ctx->out.reg_base,
 					FIFO_OTHER_INFO_REG);
 			ctx->word_cnt++;
 			if (--num_elems == 0)
-				num_elems = mmio_read32(ctx->csr_base,
+				num_elems = mmio_read32(ctx->csr.reg_base,
 						FIFO_LEVEL_REG);
 		}
 		if (!(other & FIFO_INFO_SOP))
@@ -139,12 +182,12 @@ fifo_read(struct rdfifo_ctx *ctx)
 			ctx->next = 0;
 			return FIFO_OVERLONG_ERROR;
 		}
-		ctx->buf[ctx->next++] = htonl(mmio_read32(ctx->base,
+		ctx->buf[ctx->next++] = htonl(mmio_read32(ctx->out.reg_base,
 				FIFO_DATA_REG));
-		other = mmio_read32(ctx->base, FIFO_OTHER_INFO_REG);
+		other = mmio_read32(ctx->out.reg_base, FIFO_OTHER_INFO_REG);
 		ctx->word_cnt++;
 		if (--num_elems == 0)
-			num_elems = mmio_read32(ctx->csr_base,
+			num_elems = mmio_read32(ctx->csr.reg_base,
 					FIFO_LEVEL_REG);
 	}
 

@@ -25,6 +25,7 @@
 #include "hps_0.h"
 #include "mmio.h"
 #include "packet_fifo.h"
+#include "uio_helper.h"
 
 #define HW_REGS_BASE ( ALT_STM_OFST )
 #define HW_REGS_SPAN ( 0x04000000 )
@@ -98,6 +99,7 @@ main(int argc, char *argv[])
 	void *h2p_sysid_addr;
 	void *fifo_f2h_base, *fifo_f2h_csr_base, *fifo_h2f_base;
 	struct rdfifo_ctx *fifo_f2h_ctx;
+	struct uio_info_t *uio_list, *uio_f2h, *uio;
 	uint32_t id;
 
 	if (argc < 2) {
@@ -130,11 +132,32 @@ main(int argc, char *argv[])
 	fifo_h2f_base = addr_offset_mask(virtual_base,
 			ALT_LWFPGASLVS_OFST + FIFO_H2F_IN_BASE,HW_REGS_MASK);
 
+	uio_list = uio_find_devices(-1);
+	if (!uio_list) {
+		fprintf(stderr, "Could not find uio devices.\n");
+		return 1;
+	}
+	uio = uio_list;
+	while (uio) {
+		uio_get_all_info(uio);
+		uio_get_device_attributes(uio);
+		uio = uio->next;
+	};
+
+	uio_f2h = fifo_uio_by_of_name(uio_list, "fifo-f2h0");
+	if (!uio_f2h) {
+		fprintf(stderr, "Could not find fifo-f2h0 uio.\n");
+		return 1;
+	}
 	id = mmio_read32(h2p_sysid_addr, 0);
 	printf("%#010x\n", id);
 
 	fifo_f2h_ctx = malloc(rdfifo_ctx_size());
-	init_rdfifo(fifo_f2h_ctx, fifo_f2h_base, fifo_f2h_csr_base);
+	if ((res = init_rdfifo(fifo_f2h_ctx, uio_f2h)) != 0) {
+		fprintf(stderr, "init_rdfifo error %d\n", res);
+		return 1;
+	}
+	uio_free_info(uio_list);
 
 	strncpy(dev, argv[1], IFNAMSIZ);
 	if ((tunfd = tun_alloc(dev)) < 0) {

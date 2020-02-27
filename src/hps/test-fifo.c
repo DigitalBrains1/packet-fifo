@@ -53,7 +53,6 @@ main()
 	void *fifo_f2h_base, *fifo_f2h_csr_base, *fifo_h2f_base;
 	struct rdfifo_ctx *fifo_f2h_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio;
-	char uio_dev_n[16];
 	uint32_t id, tmp;
 	ssize_t len;
 	uint8_t outbuf[2048];
@@ -106,28 +105,21 @@ main()
 		fprintf(stderr, "Got different uio for full name.\n");
 		return 1;
 	}
-	sprintf(uio_dev_n, "/dev/uio%d", uio_f2h->uio_num);
-	printf("fifo-f2h is %s\n", uio_dev_n);
-	uio_free_info(uio_list);
-
-	if ((fdu=open(uio_dev_n, O_RDWR)) == -1) {
-		fprintf(stderr, "Could not open %s: ", uio_dev_n);
-		perror(NULL);
-		return 1;
-	}
-	fifo_f2h_csr_base = mmap(NULL, 32, (PROT_READ | PROT_WRITE), MAP_SHARED, fdu, 0);
-	if (fifo_f2h_csr_base == MAP_FAILED) {
-		perror("mmap() failed");
-		return 1;
-	}
-
-	fdmax = fdu + 1;
 
 	id = mmio_read32(h2p_sysid_addr, 0);
 	printf("%#010x\n", id);
 
 	fifo_f2h_ctx = malloc(rdfifo_ctx_size());
-	init_rdfifo(fifo_f2h_ctx, fifo_f2h_base, fifo_f2h_csr_base);
+	if ((res = init_rdfifo(fifo_f2h_ctx, uio_f2h)) != 0) {
+		fprintf(stderr, "init_rdfifo error %d\n", res);
+		return 1;
+	}
+	uio_free_info(uio_list);
+
+	fdu = fifo_f2h_ctx->uio_fd;
+	fdmax = fdu + 1;
+	fifo_f2h_csr_base = fifo_f2h_ctx->csr.reg_base;
+	fifo_f2h_base = fifo_f2h_ctx->out.reg_base;
 
 	mmio_write32(fifo_f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
 	mmio_write32(fifo_f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
@@ -202,7 +194,7 @@ main()
 		perror("munmap() failed");
 		ret = 1;
 	}
+	close_rdfifo(fifo_f2h_ctx);
 	close(fdm);
-	close(fdu);
 	return ret;
 }
