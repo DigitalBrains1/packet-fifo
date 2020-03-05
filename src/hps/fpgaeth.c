@@ -88,8 +88,8 @@ main(int argc, char *argv[])
 	int tunfd;
 	ssize_t len;
 	int res;
-	struct rdfifo_ctx *fifo_f2h_ctx;
-	struct fifo_mapped_reg *fifo_h2f_ctx;
+	struct rdfifo_ctx *f2h_ctx;
+	struct fifo_mapped_reg *h2f_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
 
 	if (argc < 2) {
@@ -118,11 +118,11 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Could not find fifo-h2f0 uio.\n");
 		return 1;
 	}
-	if ((res = init_rdfifo(&fifo_f2h_ctx, uio_f2h, 2048)) != 0) {
+	if ((res = init_rdfifo(&f2h_ctx, uio_f2h, 2048)) != 0) {
 		fprintf(stderr, "init_rdfifo error %d\n", res);
 		return 1;
 	}
-	if ((res = init_wrfifo(&fifo_h2f_ctx, uio_h2f)) != 0) {
+	if ((res = init_wrfifo(&h2f_ctx, uio_h2f)) != 0) {
 		fprintf(stderr, "init_wrfifo error %d\n", res);
 		return 1;
 	}
@@ -139,12 +139,12 @@ main(int argc, char *argv[])
 	while (1) {
 		len = read(tunfd, buf, sizeof(buf));
 		if (len > 0) {
-			fifo_write(fifo_h2f_ctx, buf, len);
+			fifo_write(h2f_ctx, buf, len);
 		}
-		res = fifo_read(fifo_f2h_ctx);
+		res = fifo_read(f2h_ctx);
 		if (res == 0) {
-			tun_write(tunfd, fifo_f2h_ctx->buf,
-					fifo_f2h_ctx->numbytes);
+			tun_write(tunfd, f2h_ctx->buf,
+					f2h_ctx->numbytes);
 		} else if (res != FIFO_NEED_MORE) {
 			printf("fifo_read err: %d\n", res);
 			exit(1);
