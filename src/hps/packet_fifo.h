@@ -35,9 +35,13 @@ init_rdfifo(struct rdfifo_ctx **ctx, const struct uio_info_t *info,
 		size_t maxpkt);
 extern void
 close_rdfifo(struct rdfifo_ctx *ctx);
+int
+init_wrfifo(struct fifo_mapped_reg **in, const struct uio_info_t *info);
+void
+close_wrfifo(struct fifo_mapped_reg *in);
 extern int
 fifo_read(struct rdfifo_ctx *ctx);
 extern void
-fifo_write(void *fifo_base, const void *buf, const size_t len);
-
+fifo_write(const struct fifo_mapped_reg *in, const void *buf,
+		const size_t len);
 #endif // ndef FILE_PACKET_FIFO_H

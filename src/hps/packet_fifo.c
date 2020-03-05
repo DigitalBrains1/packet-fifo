@@ -48,6 +48,16 @@ match_uio_attr_n(const struct uio_info_t *info, const char *name,
 	return 0;
 }
 
+static char *
+get_of_fullname(const struct uio_info_t *info)
+{
+	const struct uio_dev_attr_t *attr;
+	for (attr = info->dev_attrs; attr; attr = attr->next)
+		if (!strcmp(attr->name, "uevent/OF_FULLNAME"))
+			return (char *) attr->value;
+	return NULL;
+}
+
 struct uio_info_t *
 fifo_uio_by_of_name(const struct uio_info_t *info, const char *of_name)
 {
@@ -153,6 +163,70 @@ close_rdfifo(struct rdfifo_ctx *ctx)
 }
 
 int
+init_wrfifo(struct fifo_mapped_reg **in, const struct uio_info_t *info)
+{
+	int fd;
+	char uio_dev_n[16];
+	int ret;
+	size_t i;
+
+	*in = malloc(sizeof(**in));
+	if (!*in) {
+		ret = FIFO_GENERAL_ERROR;
+		goto init_wr_out_err;
+	}
+
+	ret=FIFO_DEV_ERROR;
+	sprintf(uio_dev_n, "/dev/uio%d", info->uio_num);
+	if ((fd=open(uio_dev_n, O_RDWR)) == -1)
+		goto init_wr_out_free_ctx;
+
+	for (i = 0; i < MAX_UIO_MAPS; i++)
+		if (!strcmp(info->maps[i].name, "in"))
+			break;
+	if (i == MAX_UIO_MAPS) {
+		const char *fullname;
+		if (info->maps[1].size > 0) {
+			/* More than one mapping and none called "in" */
+			goto init_wr_out_close;
+		}
+		fullname = get_of_fullname(info);
+		if (!fullname || *fullname == '\0')
+			goto init_wr_out_close;
+		if (strcmp(info->maps[0].name, fullname))
+			goto init_wr_out_close;
+		/* Just one mapping and it is anonymous: no reg-name property
+		 * means that the name is set to the device's full device-tree
+		 * path. Assume it is our "in" register.
+		 */
+		i = 0;
+	}
+	(*in)->map_base = mmap(NULL, info->maps[i].size,
+			(PROT_READ | PROT_WRITE), MAP_SHARED, fd,
+			i * getpagesize());
+	if ((*in)->map_base == MAP_FAILED)
+		goto init_wr_out_close;
+	(*in)->size = info->maps[i].size;
+	(*in)->reg_base = addr_offset((*in)->map_base, info->maps[i].offset);
+	close(fd);
+
+	return 0;
+init_wr_out_close:
+	close(fd);
+init_wr_out_free_ctx:
+	free(*in);
+init_wr_out_err:
+	return ret;
+}
+
+void
+close_wrfifo(struct fifo_mapped_reg *in)
+{
+	munmap(in->map_base, in->size);
+	free(in);
+}
+
+int
 fifo_read(struct rdfifo_ctx *ctx)
 {
 	uint32_t tmp, num_elems;
@@ -205,7 +279,8 @@ fifo_read(struct rdfifo_ctx *ctx)
 }
 
 void
-fifo_write(void *fifo_base, const void *buf, const size_t len)
+fifo_write(const struct fifo_mapped_reg *in, const void *buf,
+		const size_t len)
 {
 	const uint8_t *buf8 = (const uint8_t *) buf;
 	uint32_t word;
@@ -217,18 +292,20 @@ fifo_write(void *fifo_base, const void *buf, const size_t len)
 	num_tail = len - (num_words << 2);
 	i = 0;
 	if (num_words != 0) {
-		mmio_write32(fifo_base, FIFO_OTHER_INFO_REG, FIFO_INFO_SOP);
+		mmio_write32(in->reg_base, FIFO_OTHER_INFO_REG,
+				FIFO_INFO_SOP);
 		for (i = 0; i < num_words * 4; i += 4) {
 			memcpy(&word, &buf8[i], 4);
-			mmio_write32(fifo_base, FIFO_DATA_REG, ntohl(word));
+			mmio_write32(in->reg_base, FIFO_DATA_REG,
+					ntohl(word));
 		}
 	}
 
-	mmio_write32(fifo_base, FIFO_OTHER_INFO_REG,
+	mmio_write32(in->reg_base, FIFO_OTHER_INFO_REG,
 			(num_words == 0 ? FIFO_INFO_SOP : 0)
 			| FIFO_INFO_EOP
 			| FIFO_INFO_EMPTY_SET(4 - num_tail));
 	word = 0;
 	memcpy(&word, &buf8[i], num_tail);
-	mmio_write32(fifo_base, FIFO_DATA_REG, ntohl(word));
+	mmio_write32(in->reg_base, FIFO_DATA_REG, ntohl(word));
 }

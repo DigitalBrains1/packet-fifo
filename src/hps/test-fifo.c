@@ -52,7 +52,8 @@ main()
 	void *h2p_sysid_addr;
 	void *fifo_f2h_base, *fifo_f2h_csr_base, *fifo_h2f_base;
 	struct rdfifo_ctx *fifo_f2h_ctx;
-	struct uio_info_t *uio_list, *uio_f2h, *uio;
+	struct fifo_mapped_reg *fifo_h2f_ctx;
+	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
 	uint32_t id, tmp;
 	ssize_t len;
 	uint8_t outbuf[2048];
@@ -105,12 +106,21 @@ main()
 		fprintf(stderr, "Got different uio for full name.\n");
 		return 1;
 	}
+	uio_h2f = fifo_uio_by_of_name(uio_list, "fifo-h2f0");
+	if (!uio_h2f) {
+		fprintf(stderr, "Could not find fifo-h2f0 uio.\n");
+		return 1;
+	}
 
 	id = mmio_read32(h2p_sysid_addr, 0);
 	printf("%#010x\n", id);
 
 	if ((res = init_rdfifo(&fifo_f2h_ctx, uio_f2h, 2048)) != 0) {
 		fprintf(stderr, "init_rdfifo error %d\n", res);
+		return 1;
+	}
+	if ((res = init_wrfifo(&fifo_h2f_ctx, uio_h2f)) != 0) {
+		fprintf(stderr, "init_wrfifo error %d\n", res);
 		return 1;
 	}
 	uio_free_info(uio_list);
@@ -136,7 +146,7 @@ main()
 
 	for (int i = 1; i < 1024; i++) {
 		printf("%d\n", i);
-		fifo_write(fifo_h2f_base, outbuf, 4);
+		fifo_write(fifo_h2f_ctx, outbuf, 4);
 		FD_ZERO(&fds);
 		FD_SET(fdu, &fds);
 		select(fdmax, &fds, NULL, NULL, &zero_time);
