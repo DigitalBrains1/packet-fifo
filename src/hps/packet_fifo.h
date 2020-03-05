@@ -42,6 +42,5 @@ close_wrfifo(struct fifo_mapped_reg *in);
 extern int
 fifo_read(struct rdfifo_ctx *ctx);
 extern void
-fifo_write(const struct fifo_mapped_reg *in, const void *buf,
-		const size_t len);
+fifo_write(const struct fifo_mapped_reg *in, const void *buf, size_t len);
 #endif // ndef FILE_PACKET_FIFO_H

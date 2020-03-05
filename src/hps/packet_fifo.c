@@ -279,8 +279,7 @@ fifo_read(struct rdfifo_ctx *ctx)
 }
 
 void
-fifo_write(const struct fifo_mapped_reg *in, const void *buf,
-		const size_t len)
+fifo_write(const struct fifo_mapped_reg *in, const void *buf, size_t len)
 {
 	const uint8_t *buf8 = (const uint8_t *) buf;
 	uint32_t word;

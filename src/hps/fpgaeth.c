@@ -18,20 +18,11 @@
 #include <linux/if.h>
 #include <linux/if_tun.h>
 
-#include "hwlib.h"
-#include "socal/socal.h"
-#include "socal/hps.h"
-#include "socal/alt_gpio.h"
-#include "hps_0.h"
 #include "mmio.h"
 #include "packet_fifo.h"
 #include "uio_helper.h"
 
-#define HW_REGS_BASE ( ALT_STM_OFST )
-#define HW_REGS_SPAN ( 0x04000000 )
-#define HW_REGS_MASK ( HW_REGS_SPAN - 1 )
-
-int
+static int
 tun_alloc(char *dev)
 {
 	struct ifreq ifr;
@@ -61,8 +52,10 @@ tun_alloc(char *dev)
 	return fd;
 }
 
-void
-dump_frame(const uint8_t *buf, const ssize_t len)
+static void
+dump_frame(const uint8_t *buf, ssize_t len) __attribute__((unused));
+static void
+dump_frame(const uint8_t *buf, ssize_t len)
 {
 	for (int i = 0; i < len; i++) {
 		printf("%02hhx ", buf[i]);
@@ -72,8 +65,8 @@ dump_frame(const uint8_t *buf, const ssize_t len)
 	}
 }
 
-void
-tun_write(const int fd, const void *data, const ssize_t len)
+static void
+tun_write(int fd, const void *data, ssize_t len)
 {
 	ssize_t len_w;
 	len_w = write(fd, data, len);
@@ -92,46 +85,17 @@ main(int argc, char *argv[])
 {
 	uint8_t buf[2048];
 	char dev[IFNAMSIZ];
-	int memfd,tunfd;
+	int tunfd;
 	ssize_t len;
-	void *virtual_base;
 	int res;
-	void *h2p_sysid_addr;
-	void *fifo_f2h_base, *fifo_f2h_csr_base, *fifo_h2f_base;
 	struct rdfifo_ctx *fifo_f2h_ctx;
 	struct fifo_mapped_reg *fifo_h2f_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
-	uint32_t id;
 
 	if (argc < 2) {
 		printf("Usage\n");
 		exit(1);
 	}
-
-	if ((memfd=open("/dev/mem", (O_RDWR | O_SYNC))) == -1) {
-		perror("Could not open /dev/mem");
-		exit(1);
-	}
-
-	virtual_base = mmap(NULL, HW_REGS_SPAN, (PROT_READ | PROT_WRITE),
-			MAP_SHARED, memfd, HW_REGS_BASE);
-
-	if (virtual_base == MAP_FAILED) {
-		perror("mmap() failed");
-		close(memfd);
-		exit(1);
-	}
-
-	h2p_sysid_addr = addr_offset_mask(virtual_base,
-			ALT_LWFPGASLVS_OFST + SYSID_QSYS_BASE,HW_REGS_MASK);
-	fifo_f2h_base = addr_offset_mask(virtual_base,
-			ALT_LWFPGASLVS_OFST + FIFO_F2H_OUT_OUT_BASE,
-			HW_REGS_MASK);
-	fifo_f2h_csr_base = addr_offset_mask(virtual_base,
-			ALT_LWFPGASLVS_OFST + FIFO_F2H_OUT_IN_CSR_BASE,
-			HW_REGS_MASK);
-	fifo_h2f_base = addr_offset_mask(virtual_base,
-			ALT_LWFPGASLVS_OFST + FIFO_H2F_IN_BASE,HW_REGS_MASK);
 
 	uio_list = uio_find_devices(-1);
 	if (!uio_list) {
@@ -144,7 +108,6 @@ main(int argc, char *argv[])
 		uio_get_device_attributes(uio);
 		uio = uio->next;
 	};
-
 	uio_f2h = fifo_uio_by_of_name(uio_list, "fifo-f2h0");
 	if (!uio_f2h) {
 		fprintf(stderr, "Could not find fifo-f2h0 uio.\n");
@@ -155,9 +118,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Could not find fifo-h2f0 uio.\n");
 		return 1;
 	}
-	id = mmio_read32(h2p_sysid_addr, 0);
-	printf("%#010x\n", id);
-
 	if ((res = init_rdfifo(&fifo_f2h_ctx, uio_f2h, 2048)) != 0) {
 		fprintf(stderr, "init_rdfifo error %d\n", res);
 		return 1;
