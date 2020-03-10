@@ -17,7 +17,7 @@ upload: fpgaeth test-fifo
 
 fpgaeth: fpgaeth.o packet_fifo.o uio_helper.o
 
-test-fifo: test-fifo.o packet_fifo.o uio_helper.o
+test-fifo: test-fifo.o vfy_spec.o packet_fifo.o uio_helper.o
 
 %.o.lst: %.o
 #	$(OBJDUMP) -rtdg $< >$@

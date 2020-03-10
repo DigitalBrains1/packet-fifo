@@ -4,25 +4,25 @@
 #include <stdint.h>
 
 static inline void *
-addr_offset(void *base, size_t offset)
+addr_offset(const void *base, size_t offset)
 {
 	return (((char *) base) + offset);
 }
 
 static inline void *
-addr_offset_mask(void *base, size_t offset, size_t mask)
+addr_offset_mask(const void *base, size_t offset, size_t mask)
 {
 	return (((char *) base) + (offset & mask));
 }
 
 static inline void
-mmio_write32(void *base, size_t offset, uint32_t data)
+mmio_write32(const void *base, size_t offset, uint32_t data)
 {
 	*(volatile uint32_t *) addr_offset(base, offset) = data;
 }
 
 static inline uint32_t
-mmio_read32(void *base, size_t offset)
+mmio_read32(const void *base, size_t offset)
 {
 	return *(volatile uint32_t *) addr_offset(base, offset);
 }

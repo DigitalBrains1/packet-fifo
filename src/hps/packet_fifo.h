@@ -28,19 +28,19 @@ rdfifo_ctx {
 #define FIFO_OVERLONG_ERROR (-4)
 #define FIFO_DEV_ERROR (-5)
 
-struct uio_info_t *
+extern struct uio_info_t *
 fifo_uio_by_of_name(const struct uio_info_t *info, const char *of_name);
 extern int
 init_rdfifo(struct rdfifo_ctx **ctx, const struct uio_info_t *info,
 		size_t maxpkt);
 extern void
 close_rdfifo(struct rdfifo_ctx *ctx);
-int
+extern int
 init_wrfifo(struct fifo_mapped_reg **in, const struct uio_info_t *info);
-void
+extern void
 close_wrfifo(struct fifo_mapped_reg *in);
 extern int
 fifo_read(struct rdfifo_ctx *ctx);
 extern void
 fifo_write(const struct fifo_mapped_reg *in, const void *buf, size_t len);
-#endif // ndef FILE_PACKET_FIFO_H
+#endif /* ndef FILE_PACKET_FIFO_H */

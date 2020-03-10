@@ -13,6 +13,7 @@
 #include "avalon_fifo.h"
 #include "packet_fifo.h"
 #include "uio_helper.h"
+#include "vfy_spec.h"
 
 static void
 hexdump(void *data, size_t len)
@@ -78,12 +79,9 @@ main()
 	f2h_csr_base = f2h_ctx->csr.reg_base;
 	f2h_base = f2h_ctx->out.reg_base;
 
-	mmio_write32(f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
+	tc_evint_level(f2h_ctx, h2f_ctx);
+
 	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
-	/* Flush FIFO */
-	for (uint32_t i = mmio_read32(f2h_csr_base, FIFO_LEVEL_REG);
-			i > 0; i--)
-		tmp = mmio_read32(f2h_base, FIFO_DATA_REG);
 
 	tmp = 0x12345678;
 	for (size_t i = 0; i < 1024; i += 4) {
@@ -91,8 +89,7 @@ main()
 		tmp += 0x1;
 	}
 
-
-	for (int i = 1; i < 1024; i++) {
+	for (int i = 1; i < 4; i++) {
 		printf("%d\n", i);
 		fifo_write(h2f_ctx, outbuf, 4);
 		FD_ZERO(&fds);
