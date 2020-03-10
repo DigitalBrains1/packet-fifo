@@ -242,3 +242,61 @@ tc_race_int_en(struct rdfifo_ctx *f2h_ctx,
 	report_result("race interrupt enable", fail);
 	return fail;
 }
+
+/*
+ * Testcase: event flag edge-sensitive
+ *
+ * Is the event bit set when the status bit has an edge or when the status bit
+ * is high level? Turns out, it's edge-sensitive indeed.
+ */
+int
+tc_evflag_edge(struct rdfifo_ctx *f2h_ctx,
+		const struct fifo_mapped_reg *h2f_ctx)
+{
+	int fail = 0;
+	const void *f2h_csr_base = f2h_ctx->csr.reg_base;
+	const void *f2h_base = f2h_ctx->out.reg_base;
+	const uint32_t data = 0x12345678;
+
+	printf("Running testcase: event flag edge-sensitive.\n");
+	init_clean(f2h_ctx, &fail);
+	fifo_write(h2f_ctx, &data, 4);
+	printf("Data written.\n");
+	vfy_flag_set("AF status", f2h_csr_base, FIFO_STATUS_REG,
+			FIFO_STATUS_AF, &fail);
+	vfy_flag_set("AF event", f2h_csr_base, FIFO_EVENT_REG,
+			FIFO_EVENT_AF, &fail);
+	mmio_write32(f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_AF);
+	printf("Event cleared.\n");
+	vfy_flag_set("AF status", f2h_csr_base, FIFO_STATUS_REG,
+			FIFO_STATUS_AF, &fail);
+	vfy_flag_unset("AF event", f2h_csr_base, FIFO_EVENT_REG,
+			FIFO_EVENT_AF, &fail);
+	fifo_write(h2f_ctx, &data, 4);
+	printf("More data written.\n");
+	vfy_flag_set("AF status", f2h_csr_base, FIFO_STATUS_REG,
+			FIFO_STATUS_AF, &fail);
+	vfy_flag_unset("AF event", f2h_csr_base, FIFO_EVENT_REG,
+			FIFO_EVENT_AF, &fail);
+	mmio_write32(f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_AF);
+	printf("Event cleared.\n");
+	vfy_flag_set("AF status", f2h_csr_base, FIFO_STATUS_REG,
+			FIFO_STATUS_AF, &fail);
+	vfy_flag_unset("AF event", f2h_csr_base, FIFO_EVENT_REG,
+			FIFO_EVENT_AF, &fail);
+	vfy_data("FIFO level", f2h_csr_base, FIFO_LEVEL_REG, 2, &fail);
+	mmio_read32(f2h_base, FIFO_DATA_REG);
+	mmio_read32(f2h_base, FIFO_DATA_REG);
+	printf("All data read.\n");
+	vfy_data("FIFO level", f2h_csr_base, FIFO_LEVEL_REG, 0, &fail);
+	vfy_flag_unset("AF status", f2h_csr_base, FIFO_STATUS_REG,
+			FIFO_STATUS_AF, &fail);
+	vfy_flag_unset("AF event", f2h_csr_base, FIFO_EVENT_REG,
+			FIFO_EVENT_AF, &fail);
+	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_AF);
+	printf("Re-enabled interrupt.\n");
+	vfy_no_intr(f2h_ctx, &fail);
+	leave_clean(f2h_ctx);
+	report_result("event flag edge-sensitive", fail);
+	return fail;
+}
