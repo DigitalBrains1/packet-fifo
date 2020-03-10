@@ -80,6 +80,7 @@ main()
 	f2h_base = f2h_ctx->out.reg_base;
 
 	tc_evint_level(f2h_ctx, h2f_ctx);
+	tc_race_int_en(f2h_ctx, h2f_ctx);
 
 	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
 

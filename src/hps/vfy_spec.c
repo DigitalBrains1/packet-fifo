@@ -80,6 +80,23 @@ vfy_intr(const char *name, const struct rdfifo_ctx *f2h_ctx, int *fail)
 	}
 }
 
+static uint32_t
+vfy_data(const char *name, const void *base, size_t offset,
+		uint32_t expect, int *fail)
+{
+	uint32_t ret;
+
+	ret = mmio_read32(base, offset);
+	printf("%s: %d", name, ret);
+	if (ret == expect) {
+		putchar('\n');
+	} else {
+		printf(" - ERROR\n");
+		*fail = 1;
+	}
+	return ret;
+}
+
 static void
 init_clean(const struct rdfifo_ctx *f2h_ctx, int *fail)
 {
@@ -177,5 +194,51 @@ tc_evint_level(struct rdfifo_ctx *f2h_ctx,
 	vfy_no_intr(f2h_ctx, &fail);
 	leave_clean(f2h_ctx);
 	report_result("interrupt level-sensitive", fail);
+	return fail;
+}
+
+/*
+ * Testcase: race interrupt enable
+ *
+ * See tc_evint_level() for background.
+ *
+ * Verify that if data arrives after we have reached fill level 0 but before
+ * we have re-enabled the interrupt, we do get that interrupt afterwards.
+ */
+int
+tc_race_int_en(struct rdfifo_ctx *f2h_ctx,
+		const struct fifo_mapped_reg *h2f_ctx)
+{
+	int fail = 0;
+	const void *f2h_csr_base = f2h_ctx->csr.reg_base;
+	const void *f2h_base = f2h_ctx->out.reg_base;
+	const uint32_t data = 0x12345678;
+
+	printf("Running testcase: race interrupt enable.\n");
+	init_clean(f2h_ctx, &fail);
+	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_AF);
+	vfy_no_intr(f2h_ctx, &fail);
+	for (int i = 0; i < 4; i++)
+		fifo_write(h2f_ctx, &data, 4);
+	vfy_intr("data", f2h_ctx, &fail);
+	vfy_no_intr(f2h_ctx, &fail);
+	vfy_flag_set("AF event", f2h_csr_base, FIFO_EVENT_REG,
+			FIFO_EVENT_AF, &fail);
+	vfy_data("FIFO level", f2h_csr_base, FIFO_LEVEL_REG, 4, &fail);
+	for (int i = 0; i < 4; i++)
+		mmio_read32(f2h_base, FIFO_DATA_REG);
+	mmio_write32(f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_AF);
+	printf("Data read and event cleared.\n");
+	vfy_flag_unset("AF event", f2h_csr_base, FIFO_EVENT_REG,
+			FIFO_EVENT_AF, &fail);
+	vfy_data("FIFO level", f2h_csr_base, FIFO_LEVEL_REG, 0, &fail);
+	fifo_write(h2f_ctx, &data, 4);
+	printf("Racing data written.\n");
+	vfy_no_intr(f2h_ctx, &fail);
+	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_AF);
+	printf("Interrupts re-enabled.\n");
+	vfy_intr("race", f2h_ctx, &fail);
+	leave_clean(f2h_ctx);
+	report_result("race interrupt enable", fail);
 	return fail;
 }

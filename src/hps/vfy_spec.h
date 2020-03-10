@@ -6,4 +6,11 @@
 extern int
 tc_evint_level(struct rdfifo_ctx *f2h_ctx,
 		const struct fifo_mapped_reg *h2f_ctx);
+
+/*
+ * Testcase: race interrupt enable
+ */
+int
+tc_race_int_en(struct rdfifo_ctx *f2h_ctx,
+		const struct fifo_mapped_reg *h2f_ctx);
 #endif /* ndef FILE_VFY_SPEC_H */
