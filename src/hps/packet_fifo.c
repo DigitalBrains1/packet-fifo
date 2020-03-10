@@ -226,36 +226,45 @@ close_wrfifo(struct fifo_mapped_reg *in)
 	free(in);
 }
 
+/*
+ * Flush until start of packet
+ */
+static void
+flush_to_sop(struct rdfifo_ctx *ctx, uint32_t *data, uint32_t *other,
+		uint32_t *num_elems)
+{
+	while (!(*other & FIFO_INFO_SOP) && (*num_elems != 0)) {
+		*data = mmio_read32(ctx->out.reg_base, FIFO_DATA_REG);
+		*other = mmio_read32(ctx->out.reg_base,
+				FIFO_OTHER_INFO_REG);
+		ctx->word_cnt++;
+		if (--*num_elems == 0)
+			*num_elems = mmio_read32(ctx->csr.reg_base,
+					FIFO_LEVEL_REG);
+	}
+}
+
 int
 fifo_read(struct rdfifo_ctx *ctx)
 {
-	uint32_t tmp, num_elems;
+	uint32_t data, num_elems;
 	uint32_t other = 0;
 
 	num_elems = mmio_read32(ctx->csr.reg_base, FIFO_LEVEL_REG);
 	if (num_elems == 0)
 		return FIFO_NEED_MORE;
-	tmp = mmio_read32(ctx->out.reg_base, FIFO_DATA_REG);
+	data = mmio_read32(ctx->out.reg_base, FIFO_DATA_REG);
 	other = mmio_read32(ctx->out.reg_base, FIFO_OTHER_INFO_REG);
 	ctx->word_cnt++;
 	num_elems--;
 
 	if (ctx->next == 0) {
-		/* Flush until start of packet */
-		while (!(other & FIFO_INFO_SOP) && (num_elems != 0)) {
-			tmp = mmio_read32(ctx->out.reg_base, FIFO_DATA_REG);
-			other = mmio_read32(ctx->out.reg_base,
-					FIFO_OTHER_INFO_REG);
-			ctx->word_cnt++;
-			if (--num_elems == 0)
-				num_elems = mmio_read32(ctx->csr.reg_base,
-						FIFO_LEVEL_REG);
-		}
+		flush_to_sop(ctx, &data, &other, &num_elems);
 		if (!(other & FIFO_INFO_SOP))
 			return FIFO_NEED_MORE;
 	}
 
-	ctx->buf[ctx->next++] = htonl(tmp);
+	ctx->buf[ctx->next++] = htonl(data);
 	while (!(other & FIFO_INFO_EOP) && (num_elems != 0)) {
 		if (ctx->next == ctx->bufsize) {
 			ctx->next = 0;
