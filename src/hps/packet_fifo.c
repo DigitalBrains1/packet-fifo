@@ -140,7 +140,10 @@ init_rdfifo(struct rdfifo_ctx **ctx, const struct uio_info_t *info,
 	(*ctx)->csr.reg_base = addr_offset((*ctx)->csr.map_base,
 			info->maps[i].offset);
 
+	mmio_write32((*ctx)->csr.reg_base, FIFO_IENABLE_REG, 0);
+	mmio_write32((*ctx)->csr.reg_base, FIFO_ALMOSTFULL_REG, 1);
 	mmio_write32((*ctx)->csr.reg_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
+	mmio_write32((*ctx)->csr.reg_base, FIFO_IENABLE_REG, FIFO_IENABLE_AF);
 
 	return 0;
 init_rd_out_mmap1:
@@ -238,9 +241,12 @@ flush_to_sop(struct rdfifo_ctx *ctx, uint32_t *data, uint32_t *other,
 		*other = mmio_read32(ctx->out.reg_base,
 				FIFO_OTHER_INFO_REG);
 		ctx->word_cnt++;
-		if (--*num_elems == 0)
+		if (--*num_elems == 0) {
+			mmio_write32(ctx->csr.reg_base, FIFO_EVENT_REG,
+					FIFO_EVENT_AF);
 			*num_elems = mmio_read32(ctx->csr.reg_base,
 					FIFO_LEVEL_REG);
+		}
 	}
 }
 
@@ -250,9 +256,13 @@ fifo_read(struct rdfifo_ctx *ctx)
 	uint32_t data, num_elems;
 	uint32_t other = 0;
 
+	mmio_write32(ctx->csr.reg_base, FIFO_EVENT_REG, FIFO_EVENT_AF);
 	num_elems = mmio_read32(ctx->csr.reg_base, FIFO_LEVEL_REG);
-	if (num_elems == 0)
+	if (num_elems == 0) {
+		mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
+				FIFO_IENABLE_AF);
 		return FIFO_NEED_MORE;
+	}
 	data = mmio_read32(ctx->out.reg_base, FIFO_DATA_REG);
 	other = mmio_read32(ctx->out.reg_base, FIFO_OTHER_INFO_REG);
 	ctx->word_cnt++;
@@ -260,30 +270,43 @@ fifo_read(struct rdfifo_ctx *ctx)
 
 	if (ctx->next == 0) {
 		flush_to_sop(ctx, &data, &other, &num_elems);
-		if (!(other & FIFO_INFO_SOP))
+		if (!(other & FIFO_INFO_SOP)) {
+			mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
+					FIFO_IENABLE_AF);
 			return FIFO_NEED_MORE;
+		}
 	}
 
 	ctx->buf[ctx->next++] = htonl(data);
 	while (!(other & FIFO_INFO_EOP) && (num_elems != 0)) {
 		if (ctx->next == ctx->bufsize) {
 			ctx->next = 0;
+			mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
+					FIFO_IENABLE_AF);
 			return FIFO_OVERLONG_ERROR;
 		}
 		ctx->buf[ctx->next++] = htonl(mmio_read32(ctx->out.reg_base,
 				FIFO_DATA_REG));
 		other = mmio_read32(ctx->out.reg_base, FIFO_OTHER_INFO_REG);
 		ctx->word_cnt++;
-		if (--num_elems == 0)
+		if (--num_elems == 0) {
+			mmio_write32(ctx->csr.reg_base, FIFO_EVENT_REG,
+					FIFO_EVENT_AF);
 			num_elems = mmio_read32(ctx->csr.reg_base,
 					FIFO_LEVEL_REG);
+		}
 	}
 
-	if (!(other & FIFO_INFO_EOP))
+	if (!(other & FIFO_INFO_EOP)) {
+		mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
+				FIFO_IENABLE_AF);
 		return FIFO_NEED_MORE;
+	}
 
 	ctx->numbytes = ctx->next * 4 - FIFO_INFO_EMPTY_GET(other);
 	ctx->next = 0;
+	mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
+			FIFO_IENABLE_AF);
 	return 0;
 }
 

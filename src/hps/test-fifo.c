@@ -29,19 +29,30 @@ hexdump(void *data, size_t len)
 		printf("\n");
 }
 
+static int
+have_f2h_intr(const struct rdfifo_ctx *f2h_ctx)
+{
+	fd_set fds;
+	struct timeval small_time = { 0, 50000 };
+
+	FD_ZERO(&fds);
+	FD_SET(f2h_ctx->uio_fd, &fds);
+	select(f2h_ctx->uio_fd + 1, &fds, NULL, NULL, &small_time);
+	if (FD_ISSET(f2h_ctx->uio_fd, &fds))
+		return 1;
+	else
+		return 0;
+}
+
 int
 main()
 {
 	int res;
-	int fdmax;
-	fd_set fds;
-	struct timeval zero_time = { 0, 0 };
-	void *f2h_base, *f2h_csr_base;
+	void *f2h_base, *f2h_csr_base, *h2f_base;
 	struct rdfifo_ctx *f2h_ctx;
 	struct fifo_mapped_reg *h2f_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
 	uint32_t tmp;
-	ssize_t len;
 	uint8_t outbuf[2048];
 
 	uio_list = uio_find_devices(-1);
@@ -75,46 +86,86 @@ main()
 	}
 	uio_free_info(uio_list);
 
-	fdmax = f2h_ctx->uio_fd + 1;
 	f2h_csr_base = f2h_ctx->csr.reg_base;
 	f2h_base = f2h_ctx->out.reg_base;
+	h2f_base = h2f_ctx->reg_base;
 
 	tc_evint_level(f2h_ctx, h2f_ctx);
 	tc_race_int_en(f2h_ctx, h2f_ctx);
 	tc_evflag_edge(f2h_ctx, h2f_ctx);
 
-	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
+	mmio_write32(h2f_base, FIFO_OTHER_INFO_REG, 0);
+	mmio_write32(h2f_base, FIFO_DATA_REG, 1);
+	mmio_write32(h2f_base, FIFO_DATA_REG, 2);
 
-	tmp = 0x12345678;
-	for (size_t i = 0; i < 1024; i += 4) {
-		memcpy(&outbuf[i], &tmp, 4);
-		tmp += 0x1;
+	for (uint16_t i = 0; i < 1024; i++) {
+		uint16_t be = htons(i+1);
+		memcpy(&outbuf[i*2], &be, 2);
 	}
 
-	for (int i = 1; i < 4; i++) {
-		printf("%d\n", i);
-		fifo_write(h2f_ctx, outbuf, 4);
-		FD_ZERO(&fds);
-		FD_SET(f2h_ctx->uio_fd, &fds);
-		select(fdmax, &fds, NULL, NULL, &zero_time);
-		if (FD_ISSET(f2h_ctx->uio_fd, &fds)) {
-			len = read(f2h_ctx->uio_fd, &tmp, 4);
-			if (len != 4)
-				printf("Short read on uio0: %d bytes\n", len);
-			printf("Interrupt occurred! %u\n", tmp);
-			mmio_write32(f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
-			mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_ALL);
+	fifo_write(h2f_ctx, outbuf, 10);
+	printf("Packet 1 written.\n");
+	if (have_f2h_intr(f2h_ctx)) {
+		printf("Got interrupt.\n");
+		read(f2h_ctx->uio_fd, &tmp, 4);
+		if (!fifo_read(f2h_ctx)) {
+			printf("Got packet with size %d bytes:\n",
+					f2h_ctx->numbytes);
+			hexdump(f2h_ctx->buf, f2h_ctx->numbytes);
+		} else {
+			printf("UNEXPECTED missing packet.\n");
 		}
 	}
-
-	while((res = fifo_read(f2h_ctx)) == FIFO_NEED_MORE) {}
-	if (res == 0) {
-		uint32_t *p;
-		printf("Got packet with size %d bytes:\n",
-				f2h_ctx->numbytes);
-		hexdump(f2h_ctx->buf, f2h_ctx->numbytes);
-		p = &f2h_ctx->buf[((f2h_ctx->numbytes-1) >> 2)];
-		printf("Last word: *%p = %#010x\n", (void *) p, *p);
+	mmio_write32(h2f_ctx->reg_base, FIFO_OTHER_INFO_REG, FIFO_INFO_SOP);
+	mmio_write32(h2f_ctx->reg_base, FIFO_DATA_REG, 0x00060007);
+	printf("Start of packet written.\n");
+	if (have_f2h_intr(f2h_ctx)) {
+		printf("Got interrupt.\n");
+		read(f2h_ctx->uio_fd, &tmp, 4);
+		if (fifo_read(f2h_ctx) == FIFO_NEED_MORE)
+			printf("f2h: Need more.\n");
+		else
+			printf("UNEXPECTED f2h response.\n");
+	} else {
+		printf("UNEXPECTED missing interrupt.\n");
+	}
+	mmio_write32(h2f_ctx->reg_base, FIFO_OTHER_INFO_REG, FIFO_INFO_EOP);
+	mmio_write32(h2f_ctx->reg_base, FIFO_DATA_REG, 0x00080009);
+	mmio_write32(h2f_ctx->reg_base, FIFO_OTHER_INFO_REG,
+			FIFO_INFO_SOP | FIFO_INFO_EOP);
+	mmio_write32(h2f_ctx->reg_base, FIFO_DATA_REG, 0x000a000b);
+	printf("End of packet and another packet written.\n");
+	if (have_f2h_intr(f2h_ctx)) {
+		printf("Got interrupt.\n");
+		read(f2h_ctx->uio_fd, &tmp, 4);
+		if (!fifo_read(f2h_ctx)) {
+			printf("Got packet with size %d bytes:\n",
+					f2h_ctx->numbytes);
+			hexdump(f2h_ctx->buf, f2h_ctx->numbytes);
+		} else {
+			printf("UNEXPECTED missing packet.\n");
+		}
+	}
+	if (!have_f2h_intr(f2h_ctx)) {
+		printf("Didn't get another interrupt.\n");
+		if (!fifo_read(f2h_ctx)) {
+			printf("Got packet with size %d bytes:\n",
+					f2h_ctx->numbytes);
+			hexdump(f2h_ctx->buf, f2h_ctx->numbytes);
+		} else {
+			printf("UNEXPECTED missing packet.\n");
+		}
+	} else {
+		printf("UNEXPECTED interrupt.\n");
+	}
+	if (!have_f2h_intr(f2h_ctx)) {
+		printf("Didn't get another interrupt.\n");
+		if (fifo_read(f2h_ctx) == FIFO_NEED_MORE)
+			printf("f2h: Need more.\n");
+		else
+			printf("UNEXPECTED f2h response.\n");
+	} else {
+		printf("UNEXPECTED interrupt.\n");
 	}
 
 	close_rdfifo(f2h_ctx);

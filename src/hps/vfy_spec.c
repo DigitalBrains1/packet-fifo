@@ -168,6 +168,7 @@ tc_evint_level(struct rdfifo_ctx *f2h_ctx,
 {
 	int fail = 0;
 	const void *f2h_csr_base = f2h_ctx->csr.reg_base;
+	const void *f2h_base = f2h_ctx->out.reg_base;
 	const uint32_t data = 0x12345678;
 
 	printf("Running testcase: interrupt level-sensitive.\n");
@@ -181,7 +182,7 @@ tc_evint_level(struct rdfifo_ctx *f2h_ctx,
 			FIFO_EVENT_AF, &fail);
 	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_AF);
 	vfy_intr("high level AF", f2h_ctx, &fail);
-	fifo_read(f2h_ctx);
+	mmio_read32(f2h_base, FIFO_DATA_REG);
 	printf("Packet read.\n");
 	vfy_flag_unset("AF status", f2h_csr_base, FIFO_STATUS_REG,
 			FIFO_STATUS_AF, &fail);

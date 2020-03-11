@@ -19,6 +19,7 @@
 #include <linux/if_tun.h>
 
 #include "mmio.h"
+#include "avalon_fifo.h"
 #include "packet_fifo.h"
 #include "uio_helper.h"
 
@@ -65,32 +66,59 @@ dump_frame(const uint8_t *buf, ssize_t len)
 	}
 }
 
-static void
-tun_write(int fd, const void *data, ssize_t len)
+static int
+handle_f2h_packet(struct rdfifo_ctx *f2h_ctx, const int tunfd)
 {
+	int res;
 	ssize_t len_w;
-	len_w = write(fd, data, len);
-	if (len_w < 0) {
-		perror("write");
+
+	res = fifo_read(f2h_ctx);
+	if (res == 0) {
+		len_w = write(tunfd, f2h_ctx->buf,
+				f2h_ctx->numbytes);
+		if (len_w < 0) {
+			perror("write");
+			exit(1);
+		}
+		if (len_w != (ssize_t) f2h_ctx->numbytes) {
+			printf("Incomplete tunnel write\n");
+			exit(1);
+		}
+		return 1;
+	} else if (res == FIFO_NEED_MORE) {
+		return 0;
+	} else {
+		printf("fifo_read err: %d\n", res);
 		exit(1);
 	}
-	if (len_w != len) {
-		printf("Incomplete write\n");
-		exit(1);
+}
+
+static int
+handle_tun_packet(const int tunfd, struct fifo_mapped_reg *h2f_ctx)
+{
+	uint8_t buf[2048];
+	ssize_t len;
+
+	len = read(tunfd, buf, sizeof(buf));
+	if (len > 0) {
+		fifo_write(h2f_ctx, buf, len);
+		return 1;
+	} else {
+		return 0;
 	}
 }
 
 int
 main(int argc, char *argv[])
 {
-	uint8_t buf[2048];
-	char dev[IFNAMSIZ];
-	int tunfd;
-	ssize_t len;
-	int res;
+	char dev[IFNAMSIZ+1];
 	struct rdfifo_ctx *f2h_ctx;
 	struct fifo_mapped_reg *h2f_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
+	int res, read_f2h, read_tun;
+	fd_set fds;
+	int tunfd, fdmax;
+	uint32_t tmp;
 
 	if (argc < 2) {
 		printf("Usage\n");
@@ -136,18 +164,26 @@ main(int argc, char *argv[])
 	printf("%s\n",dev);
 	//ioctl(fd1, TUNSETNOCSUM, 1);
 
+	fdmax = (tunfd > f2h_ctx->uio_fd ? tunfd : f2h_ctx->uio_fd) + 1;
+
+	read_f2h = 1;
+	read_tun = 1;
 	while (1) {
-		len = read(tunfd, buf, sizeof(buf));
-		if (len > 0) {
-			fifo_write(h2f_ctx, buf, len);
-		}
-		res = fifo_read(f2h_ctx);
-		if (res == 0) {
-			tun_write(tunfd, f2h_ctx->buf,
-					f2h_ctx->numbytes);
-		} else if (res != FIFO_NEED_MORE) {
-			printf("fifo_read err: %d\n", res);
-			exit(1);
+		if (read_f2h)
+			read_f2h = handle_f2h_packet(f2h_ctx, tunfd);
+		if (read_tun)
+			read_tun = handle_tun_packet(tunfd, h2f_ctx);
+		if (!read_f2h && !read_tun) {
+			FD_ZERO(&fds);
+			FD_SET(tunfd, &fds);
+			FD_SET(f2h_ctx->uio_fd, &fds);
+			select(fdmax, &fds, NULL, NULL, NULL);
+			if (FD_ISSET(f2h_ctx->uio_fd, &fds)) {
+				read(f2h_ctx->uio_fd, &tmp, 4);
+				read_f2h = 1;
+			}
+			if (FD_ISSET(tunfd, &fds))
+				read_tun = 1;
 		}
 	}
 }
