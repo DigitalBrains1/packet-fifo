@@ -3,6 +3,13 @@ module soc_system (
 	button_pio_external_connection_export,
 	clk_clk,
 	dipsw_pio_external_connection_export,
+	fifo_f2h_in_mm_external_interface_address,
+	fifo_f2h_in_mm_external_interface_byte_enable,
+	fifo_f2h_in_mm_external_interface_read,
+	fifo_f2h_in_mm_external_interface_write,
+	fifo_f2h_in_mm_external_interface_write_data,
+	fifo_f2h_in_mm_external_interface_acknowledge,
+	fifo_f2h_in_mm_external_interface_read_data,
 	fifo_h2f_out_mm_external_interface_address,
 	fifo_h2f_out_mm_external_interface_byte_enable,
 	fifo_h2f_out_mm_external_interface_read,
@@ -94,18 +101,18 @@ module soc_system (
 	memory_mem_odt,
 	memory_mem_dm,
 	memory_oct_rzqin,
-	reset_reset_n,
-	fifo_f2h_in_mm_external_interface_address,
-	fifo_f2h_in_mm_external_interface_byte_enable,
-	fifo_f2h_in_mm_external_interface_read,
-	fifo_f2h_in_mm_external_interface_write,
-	fifo_f2h_in_mm_external_interface_write_data,
-	fifo_f2h_in_mm_external_interface_acknowledge,
-	fifo_f2h_in_mm_external_interface_read_data);	
+	reset_reset_n);	
 
 	input	[3:0]	button_pio_external_connection_export;
 	input		clk_clk;
 	input	[9:0]	dipsw_pio_external_connection_export;
+	input	[2:0]	fifo_f2h_in_mm_external_interface_address;
+	input	[3:0]	fifo_f2h_in_mm_external_interface_byte_enable;
+	input		fifo_f2h_in_mm_external_interface_read;
+	input		fifo_f2h_in_mm_external_interface_write;
+	input	[31:0]	fifo_f2h_in_mm_external_interface_write_data;
+	output		fifo_f2h_in_mm_external_interface_acknowledge;
+	output	[31:0]	fifo_f2h_in_mm_external_interface_read_data;
 	input	[5:0]	fifo_h2f_out_mm_external_interface_address;
 	input	[3:0]	fifo_h2f_out_mm_external_interface_byte_enable;
 	input		fifo_h2f_out_mm_external_interface_read;
@@ -198,11 +205,4 @@ module soc_system (
 	output	[3:0]	memory_mem_dm;
 	input		memory_oct_rzqin;
 	input		reset_reset_n;
-	input	[2:0]	fifo_f2h_in_mm_external_interface_address;
-	input	[3:0]	fifo_f2h_in_mm_external_interface_byte_enable;
-	input		fifo_f2h_in_mm_external_interface_read;
-	input		fifo_f2h_in_mm_external_interface_write;
-	input	[31:0]	fifo_f2h_in_mm_external_interface_write_data;
-	output		fifo_f2h_in_mm_external_interface_acknowledge;
-	output	[31:0]	fifo_f2h_in_mm_external_interface_read_data;
 endmodule

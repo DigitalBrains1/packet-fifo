@@ -3,6 +3,13 @@
 			button_pio_external_connection_export          : in    std_logic_vector(3 downto 0)  := (others => 'X'); -- export
 			clk_clk                                        : in    std_logic                     := 'X';             -- clk
 			dipsw_pio_external_connection_export           : in    std_logic_vector(9 downto 0)  := (others => 'X'); -- export
+			fifo_f2h_in_mm_external_interface_address      : in    std_logic_vector(2 downto 0)  := (others => 'X'); -- address
+			fifo_f2h_in_mm_external_interface_byte_enable  : in    std_logic_vector(3 downto 0)  := (others => 'X'); -- byte_enable
+			fifo_f2h_in_mm_external_interface_read         : in    std_logic                     := 'X';             -- read
+			fifo_f2h_in_mm_external_interface_write        : in    std_logic                     := 'X';             -- write
+			fifo_f2h_in_mm_external_interface_write_data   : in    std_logic_vector(31 downto 0) := (others => 'X'); -- write_data
+			fifo_f2h_in_mm_external_interface_acknowledge  : out   std_logic;                                        -- acknowledge
+			fifo_f2h_in_mm_external_interface_read_data    : out   std_logic_vector(31 downto 0);                    -- read_data
 			fifo_h2f_out_mm_external_interface_address     : in    std_logic_vector(5 downto 0)  := (others => 'X'); -- address
 			fifo_h2f_out_mm_external_interface_byte_enable : in    std_logic_vector(3 downto 0)  := (others => 'X'); -- byte_enable
 			fifo_h2f_out_mm_external_interface_read        : in    std_logic                     := 'X';             -- read
@@ -94,14 +101,7 @@
 			memory_mem_odt                                 : out   std_logic;                                        -- mem_odt
 			memory_mem_dm                                  : out   std_logic_vector(3 downto 0);                     -- mem_dm
 			memory_oct_rzqin                               : in    std_logic                     := 'X';             -- oct_rzqin
-			reset_reset_n                                  : in    std_logic                     := 'X';             -- reset_n
-			fifo_f2h_in_mm_external_interface_address      : in    std_logic_vector(2 downto 0)  := (others => 'X'); -- address
-			fifo_f2h_in_mm_external_interface_byte_enable  : in    std_logic_vector(3 downto 0)  := (others => 'X'); -- byte_enable
-			fifo_f2h_in_mm_external_interface_read         : in    std_logic                     := 'X';             -- read
-			fifo_f2h_in_mm_external_interface_write        : in    std_logic                     := 'X';             -- write
-			fifo_f2h_in_mm_external_interface_write_data   : in    std_logic_vector(31 downto 0) := (others => 'X'); -- write_data
-			fifo_f2h_in_mm_external_interface_acknowledge  : out   std_logic;                                        -- acknowledge
-			fifo_f2h_in_mm_external_interface_read_data    : out   std_logic_vector(31 downto 0)                     -- read_data
+			reset_reset_n                                  : in    std_logic                     := 'X'              -- reset_n
 		);
 	end component soc_system;
 
@@ -110,6 +110,13 @@
 			button_pio_external_connection_export          => CONNECTED_TO_button_pio_external_connection_export,          --     button_pio_external_connection.export
 			clk_clk                                        => CONNECTED_TO_clk_clk,                                        --                                clk.clk
 			dipsw_pio_external_connection_export           => CONNECTED_TO_dipsw_pio_external_connection_export,           --      dipsw_pio_external_connection.export
+			fifo_f2h_in_mm_external_interface_address      => CONNECTED_TO_fifo_f2h_in_mm_external_interface_address,      --  fifo_f2h_in_mm_external_interface.address
+			fifo_f2h_in_mm_external_interface_byte_enable  => CONNECTED_TO_fifo_f2h_in_mm_external_interface_byte_enable,  --                                   .byte_enable
+			fifo_f2h_in_mm_external_interface_read         => CONNECTED_TO_fifo_f2h_in_mm_external_interface_read,         --                                   .read
+			fifo_f2h_in_mm_external_interface_write        => CONNECTED_TO_fifo_f2h_in_mm_external_interface_write,        --                                   .write
+			fifo_f2h_in_mm_external_interface_write_data   => CONNECTED_TO_fifo_f2h_in_mm_external_interface_write_data,   --                                   .write_data
+			fifo_f2h_in_mm_external_interface_acknowledge  => CONNECTED_TO_fifo_f2h_in_mm_external_interface_acknowledge,  --                                   .acknowledge
+			fifo_f2h_in_mm_external_interface_read_data    => CONNECTED_TO_fifo_f2h_in_mm_external_interface_read_data,    --                                   .read_data
 			fifo_h2f_out_mm_external_interface_address     => CONNECTED_TO_fifo_h2f_out_mm_external_interface_address,     -- fifo_h2f_out_mm_external_interface.address
 			fifo_h2f_out_mm_external_interface_byte_enable => CONNECTED_TO_fifo_h2f_out_mm_external_interface_byte_enable, --                                   .byte_enable
 			fifo_h2f_out_mm_external_interface_read        => CONNECTED_TO_fifo_h2f_out_mm_external_interface_read,        --                                   .read
@@ -201,13 +208,6 @@
 			memory_mem_odt                                 => CONNECTED_TO_memory_mem_odt,                                 --                                   .mem_odt
 			memory_mem_dm                                  => CONNECTED_TO_memory_mem_dm,                                  --                                   .mem_dm
 			memory_oct_rzqin                               => CONNECTED_TO_memory_oct_rzqin,                               --                                   .oct_rzqin
-			reset_reset_n                                  => CONNECTED_TO_reset_reset_n,                                  --                              reset.reset_n
-			fifo_f2h_in_mm_external_interface_address      => CONNECTED_TO_fifo_f2h_in_mm_external_interface_address,      --  fifo_f2h_in_mm_external_interface.address
-			fifo_f2h_in_mm_external_interface_byte_enable  => CONNECTED_TO_fifo_f2h_in_mm_external_interface_byte_enable,  --                                   .byte_enable
-			fifo_f2h_in_mm_external_interface_read         => CONNECTED_TO_fifo_f2h_in_mm_external_interface_read,         --                                   .read
-			fifo_f2h_in_mm_external_interface_write        => CONNECTED_TO_fifo_f2h_in_mm_external_interface_write,        --                                   .write
-			fifo_f2h_in_mm_external_interface_write_data   => CONNECTED_TO_fifo_f2h_in_mm_external_interface_write_data,   --                                   .write_data
-			fifo_f2h_in_mm_external_interface_acknowledge  => CONNECTED_TO_fifo_f2h_in_mm_external_interface_acknowledge,  --                                   .acknowledge
-			fifo_f2h_in_mm_external_interface_read_data    => CONNECTED_TO_fifo_f2h_in_mm_external_interface_read_data     --                                   .read_data
+			reset_reset_n                                  => CONNECTED_TO_reset_reset_n                                   --                              reset.reset_n
 		);
 

@@ -2,6 +2,13 @@
 		.button_pio_external_connection_export          (<connected-to-button_pio_external_connection_export>),          //     button_pio_external_connection.export
 		.clk_clk                                        (<connected-to-clk_clk>),                                        //                                clk.clk
 		.dipsw_pio_external_connection_export           (<connected-to-dipsw_pio_external_connection_export>),           //      dipsw_pio_external_connection.export
+		.fifo_f2h_in_mm_external_interface_address      (<connected-to-fifo_f2h_in_mm_external_interface_address>),      //  fifo_f2h_in_mm_external_interface.address
+		.fifo_f2h_in_mm_external_interface_byte_enable  (<connected-to-fifo_f2h_in_mm_external_interface_byte_enable>),  //                                   .byte_enable
+		.fifo_f2h_in_mm_external_interface_read         (<connected-to-fifo_f2h_in_mm_external_interface_read>),         //                                   .read
+		.fifo_f2h_in_mm_external_interface_write        (<connected-to-fifo_f2h_in_mm_external_interface_write>),        //                                   .write
+		.fifo_f2h_in_mm_external_interface_write_data   (<connected-to-fifo_f2h_in_mm_external_interface_write_data>),   //                                   .write_data
+		.fifo_f2h_in_mm_external_interface_acknowledge  (<connected-to-fifo_f2h_in_mm_external_interface_acknowledge>),  //                                   .acknowledge
+		.fifo_f2h_in_mm_external_interface_read_data    (<connected-to-fifo_f2h_in_mm_external_interface_read_data>),    //                                   .read_data
 		.fifo_h2f_out_mm_external_interface_address     (<connected-to-fifo_h2f_out_mm_external_interface_address>),     // fifo_h2f_out_mm_external_interface.address
 		.fifo_h2f_out_mm_external_interface_byte_enable (<connected-to-fifo_h2f_out_mm_external_interface_byte_enable>), //                                   .byte_enable
 		.fifo_h2f_out_mm_external_interface_read        (<connected-to-fifo_h2f_out_mm_external_interface_read>),        //                                   .read
@@ -93,13 +100,6 @@
 		.memory_mem_odt                                 (<connected-to-memory_mem_odt>),                                 //                                   .mem_odt
 		.memory_mem_dm                                  (<connected-to-memory_mem_dm>),                                  //                                   .mem_dm
 		.memory_oct_rzqin                               (<connected-to-memory_oct_rzqin>),                               //                                   .oct_rzqin
-		.reset_reset_n                                  (<connected-to-reset_reset_n>),                                  //                              reset.reset_n
-		.fifo_f2h_in_mm_external_interface_address      (<connected-to-fifo_f2h_in_mm_external_interface_address>),      //  fifo_f2h_in_mm_external_interface.address
-		.fifo_f2h_in_mm_external_interface_byte_enable  (<connected-to-fifo_f2h_in_mm_external_interface_byte_enable>),  //                                   .byte_enable
-		.fifo_f2h_in_mm_external_interface_read         (<connected-to-fifo_f2h_in_mm_external_interface_read>),         //                                   .read
-		.fifo_f2h_in_mm_external_interface_write        (<connected-to-fifo_f2h_in_mm_external_interface_write>),        //                                   .write
-		.fifo_f2h_in_mm_external_interface_write_data   (<connected-to-fifo_f2h_in_mm_external_interface_write_data>),   //                                   .write_data
-		.fifo_f2h_in_mm_external_interface_acknowledge  (<connected-to-fifo_f2h_in_mm_external_interface_acknowledge>),  //                                   .acknowledge
-		.fifo_f2h_in_mm_external_interface_read_data    (<connected-to-fifo_f2h_in_mm_external_interface_read_data>)     //                                   .read_data
+		.reset_reset_n                                  (<connected-to-reset_reset_n>)                                   //                              reset.reset_n
 	);
 

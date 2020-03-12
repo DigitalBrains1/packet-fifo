@@ -1,7 +1,3 @@
-/* Notes:
- *
- * - Uses lightweight bridge for now
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
