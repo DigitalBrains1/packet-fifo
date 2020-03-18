@@ -141,7 +141,7 @@ leave_clean(const struct rdfifo_ctx *f2h_ctx)
 			i > 0; i--)
 		mmio_read32(f2h_base, FIFO_DATA_REG);
 	mmio_write32(f2h_csr_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
-	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, FIFO_IENABLE_AF);
+	mmio_write32(f2h_csr_base, FIFO_IENABLE_REG, 0);
 }
 
 /*

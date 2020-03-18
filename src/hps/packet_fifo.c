@@ -143,7 +143,6 @@ init_rdfifo(struct rdfifo_ctx **ctx, const struct uio_info_t *info,
 	mmio_write32((*ctx)->csr.reg_base, FIFO_IENABLE_REG, 0);
 	mmio_write32((*ctx)->csr.reg_base, FIFO_ALMOSTFULL_REG, 1);
 	mmio_write32((*ctx)->csr.reg_base, FIFO_EVENT_REG, FIFO_EVENT_ALL);
-	mmio_write32((*ctx)->csr.reg_base, FIFO_IENABLE_REG, FIFO_IENABLE_AF);
 
 	return 0;
 init_rd_out_mmap1:
@@ -281,8 +280,6 @@ fifo_read(struct rdfifo_ctx *ctx)
 	while (!(other & FIFO_INFO_EOP) && (num_elems != 0)) {
 		if (ctx->next == ctx->bufsize) {
 			ctx->next = 0;
-			mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
-					FIFO_IENABLE_AF);
 			return FIFO_OVERLONG_ERROR;
 		}
 		ctx->buf[ctx->next++] = htonl(mmio_read32(ctx->out.reg_base,
@@ -305,8 +302,6 @@ fifo_read(struct rdfifo_ctx *ctx)
 
 	ctx->numbytes = ctx->next * 4 - FIFO_INFO_EMPTY_GET(other);
 	ctx->next = 0;
-	mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
-			FIFO_IENABLE_AF);
 	return 0;
 }
 
