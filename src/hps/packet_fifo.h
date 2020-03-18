@@ -24,9 +24,8 @@ rdfifo_ctx {
 
 #define FIFO_GENERAL_ERROR (-1)
 #define FIFO_NEED_MORE (-2)
-#define FIFO_EVENT_ERROR (-3)
-#define FIFO_OVERLONG_ERROR (-4)
-#define FIFO_DEV_ERROR (-5)
+#define FIFO_OVERLONG_ERROR (-3)
+#define FIFO_DEV_ERROR (-4)
 
 extern struct uio_info_t *
 fifo_uio_by_of_name(const struct uio_info_t *info, const char *of_name);
