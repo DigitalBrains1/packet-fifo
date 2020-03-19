@@ -1,0 +1,351 @@
+This is code to support the exchange of byte-based packets between CλaSH code
+running on an FPGA and Linux running on the HPS of an Intel Cyclone SoC.
+Communication is based on the Intel FPGA Avalon FIFO Memory Core, so it is
+usable in any setting where such Avalon interfaces can be instantiated.
+
+The layout of the repository is as follows:
+
+quartus/
+	A Quartus project to instantiate a working setup on a Terasic
+	DE10-Standard Development Kit.
+src/clash/
+	The CλaSH code to support packet exchange, with some example programs.
+src/hps/
+	The usermode Linux code to support packet exchange with an example
+	program and a testing program.
+
+Apart from these things, you will also need a Linux kernel driver that is
+available at <https://github.com/DigitalBrains1/altera-fifo-kmod>.
+
+Note that data exchange is not that quick. The likely culprit is the
+programmed I/O data transfer on the HPS side. It should be managed by a DMA
+controller to achieve good throughput. This project is a first step towards a
+performant implementation.
+
+=========================
+Using the Quartus project
+=========================
+
+The Quartus project is based on the "Golden Hardware Reference Design" for the
+Terasic DE10-Standard dev kit, suitably adapted. The CλaSH code is not the
+top-level design. Instead, the top-level, DE10_Standard_GHRD.v, expects a
+module named packet_fifo with the expected ports. Look at the section about
+CλaSH to learn more about generating the correct Verilog module. All that is
+needed in Quartus is to add the Verilog file produced by CλaSH to the project.
+
+Open quartus/soc_system.qsys with Quartus to launch the Intel Platform
+Designer (QSys) to look at and change the configuration of the project.
+
+
+=============================
+Using the usermode Linux code
+=============================
+
+Note on licensing
+-----------------
+
+Most files in src/hps/ are dual-licensed under BSD and GPL. You can choose
+whether you wish to use the BSD license or the GPL license, either GPL v2 or,
+at your option, any later version. HOWEVER, the files uio_helper.{c,h} are GPL
+only. This means the combined work can only be distributed under the GPL. The
+BSD license only applies to the individual files which declare themselves
+BSD-licensed. Linking uio_helper in makes it GPL-only.
+
+Updating overlay.dts
+--------------------
+
+The first step is producing a devicetree overlay file that tells the kernel
+about the attached Intel FPGA Avalon FIFO Memory Cores. A devicetree overlay
+file matching the Quartus project is included at src/hps/overlay.dts, but if
+QSys is used to change the project, it will have to be reconstructed.
+
+Quartus can produce devicetrees for the systems designed in QSys, but they do
+not seem to lead to a bootable Linux system. Instead, it seems one is supposed
+to use this as a basis for writing the correct devicetree. The approach chosen
+is that of devicetree overlays, which modify and extend an existing
+devicetree.
+
+Note that all devicetree-related commands need to be run from inside an Intel
+FPGA SoC Embedded Command Shell. Depending on how it is installed, this might
+be the following:
+
+$ ~/intelFPGA/18.1/embedded/embedded_command_shell.sh
+
+Quartus can generate a new devicetree as follows:
+
+$ cd quartus
+$ sopc2dts -i soc_system.sopcinfo --force-altr -o temp.dts
+
+The resultant temp.dts is a full devicetree. We need only a portion of it.
+Open your favourite editor, and select the section between
+
+	hps_0_bridges: bridge@0xc0000000 {
+
+		[...]
+
+	}; //end bridge@0xc0000000 (hps_0_bridges)
+
+including those lines themselves. Open src/hps/overlay.dts and edit it to
+include this new section as follows:
+
+
+	/dts-v1/ /plugin/;
+
+	/ {
+		compatible = "altr,socfpga-cyclone5";
+
+		fragment@0 {
+			target-path = "/soc";
+			__overlay__ {
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				hps_0_bridges: bridge@0xc0000000 {
+
+					[...]
+
+				}; //end bridge@0xc0000000 (hps_0_bridges)
+			};
+		};
+
+	[... file continues, read on ...]
+
+So to put it differently: the current src/hps/overlay.dts contains a section
+called hps_0_bridges: bridge@0xc0000000 and this is the bit that we want to
+work with. If we change something in QSys, sopc2dts can regenerate this as
+part of a larger file, and we extract just this bit from that file and update
+our src/hps/overlay.dts.
+
+We need to change one more thing. Every node that generates interrupts has the
+following property:
+
+	interrupt-parent = <&hps_0_arm_gic_0>;
+
+but the interrupt controller in the devicetree we are making an overlay for is
+not called hps_0_arm_gic_0, it is simply called intc. There are two solutions.
+If one of the devicetree parents already specified an interrupt-parent set to
+intc, the interrupt-parent entries in the overlay can just be removed.[1] If
+this is not the case, change all occurrences of that interrupt-parent property
+to:
+
+	interrupt-parent = <&intc>;
+
+In the overlay provided in this project, the interrupt-parent property is
+removed because /soc already provides the correct value. Of course, if you are
+using a different devicetree as the basis, the interrupt controller might have
+a different name.
+
+Now we come to the second fragment in src/hps/overlay.dts. A devicetree allows
+us to give short descriptive names, aliases, to nodes in the tree. The only
+allowed characters in aliases are alphanumerics and the dash. Linux does not
+enforce this character set restriction (it is in the Devicetree
+specification), but does require that the alias ends in a decimal number. Any
+aliases that do not end in a number are effectively ignored by Linux.
+
+We use aliases to conveniently find the FIFOs we are interested in. The
+example programs in src/hps expect the aliases fifo-h2f0 and fifo-f2h0. h2f
+carries packets from the HPS (Linux) to the FPGA (CλaSH). f2h carries packets
+from FPGA to HPS. The /aliases node in the devicetree maps these aliases to
+the full paths of the node they refer to. For the Quartus project included,
+that boils down to the rest of overlay.dts looking as follows:
+
+		fragment@1 {
+			target-path="/aliases";
+			__overlay__ {
+				fifo-h2f0 = "/soc/bridge@0xc0000000/fifo@0x000001000";
+				fifo-f2h0 = "/soc/bridge@0xc0000000/fifo@0x000002000";
+			};
+		};
+	};
+
+
+Applying the overlay to your system
+-----------------------------------
+
+Note that all devicetree-related commands need to be run from inside an Intel
+FPGA SoC Embedded Command Shell. Depending on how it is installed, this might
+be the following:
+
+$ ~/intelFPGA/18.1/embedded/embedded_command_shell.sh
+
+Building the overlay can be done through
+
+$ cd src/hps
+$ make overlay.dtb
+
+Applying it can be done in multiple ways. This is one:
+
+- Take the SD card containing your Linux install and insert it in your
+  computer.
+- Mount the partition that contains zImage and socfgpa.dtb.
+
+Use the following command to directly apply the overlay to socfpga.dtb:
+
+$ fdtoverlay -o socfpga.new.dtb -i socfpga.dtb overlay.dtb
+
+and copy this as the new socfpga.dtb back to the SD card.
+
+If you use this method, you might find that U-Boot will not reserve enough
+room for the now larger socfpga.dtb, and booting fails with "Bad Linux ARM
+zImage magic!" because the larger file overwrote the start of the kernel
+image. This can usually be corrected easily in U-Boot:
+
+	U-Boot SPL 2013.01.01 (Jan 09 2017 - 17:37:20)
+	BOARD : Altera SOCFPGA Cyclone V Board
+	[...]
+
+	U-Boot 2013.01.01 (Jan 09 2017 - 19:43:57)
+
+	CPU   : Altera SOCFPGA Platform
+	BOARD : Altera SOCFPGA Cyclone V Board
+	[...]
+
+	Hit any key to stop autoboot:  0
+	SOCFPGA_CYCLONE5 # fatls mmc 0:1
+	  4988952   zimage~
+	      212   u-boot.scr
+	  5071776   zimage
+	  4694312   zimage.upstream
+	    31483   socfpga.dtb~
+	    34624   socfpga.dtb
+
+	6 file(s), 0 dir(s)
+
+	SOCFPGA_CYCLONE5 # printenv fdtaddr loadaddr
+	fdtaddr=0x00000100
+	loadaddr=0x8000
+	SOCFPGA_CYCLONE5 # setenv loadaddr 0xc000
+	SOCFPGA_CYCLONE5 # saveenv
+	Saving Environment to MMC...
+	Writing to MMC(0)... Timeout on data busy
+	Timeout on data busy
+	done
+	SOCFPGA_CYCLONE5 # boot
+	[...]
+
+While we could actually move the loadaddr less (the last byte of the fdt is at
+address 0x883f), I have moved it to 0xc000 so it will still fit even with
+larger overlays.
+
+
+Using the example program
+-------------------------
+
+The included program is fpgaeth. It will open a Universal TUN/TAP device (as a
+TAP device), and any packets arriving on that network interface are sent to
+CλaSH. Any packets received from CλaSH are sent out to the TAP device. You
+could use the regular Linux bridging tools to bridge the TAP to the Ethernet
+connection of the DE10-Standard.
+
+Invoking
+
+$ make
+
+will not only compile fpgaeth and test-fifo, but also rsync them to the
+DE10-Standard over the network. Adapt the Makefile if your setup is different.
+
+On the Linux system on the DE10-Standard, first load the altera_fifo kernel
+module mentioned earlier on (see the kernel module documentation), and then:
+
+$ ./fpgaeth tapfpga
+
+Where tapfpga is the name of the TAP device to open. If this is a pre-existing
+interface, it binds to that. Otherwise, an interface with that name is
+automatically created. The following command creates an unbound, non-ephemeral
+interface:
+
+# ip tuntap add tapfpga mode tap
+
+To bridge packets between the FPGA and the onboard Ethernet, either configure
+this using your favorite tools, or directly use the low-level command line
+tools as follows. A new enough BusyBox might support all the needed
+functionality in its ip applet. Otherwise, install the iproute2 package, for
+instance using "opkg install iproute2". Making sure a working version of these
+tools is available is beyond the scope of this document.
+
+# ip link add en-br type bridge
+    <adds an Ethernet bridge which will bridge packets between all slave
+    interfaces>
+# ip link set en-br address 52:54:00:47:52:19
+    <(optional) You might want a static MAC for your network interface>
+# ip link set en-br up
+    <Bring the bridge up>
+# ip link set eth0 master en-br
+    <Onboard ethernet added to bridge>
+# ip link set eth0 up
+    <Bring the slave up>
+# ip link set tapfpga master en-br
+    <TAP device added to bridge>
+# ip link set tapfpga up
+    <Bring the slave up>
+
+Writing your own programs
+-------------------------
+
+Use the API provided by packet_fifo.h. In addition to the documentation there,
+the example program fpgaeth shows much of how to use that API.
+
+Because fpgaeth only exits when it receives a terminating signal, it does not
+show the usual freeing of resources when exiting. Simply call close_rdfifo()
+or close_wrfifo() when you are done with the FIFO to release all related
+resources.
+
+Interrupt-driven reading of FIFO's is done through the Linux kernel's
+Userspace I/O (UIO) subsystem.
+
+Suspending execution and waiting for an interrupt is done by either a blocking
+read() on `rdfifo_ctx->uio_fd` or a select() on that fd. Note that
+`rdfifo_ctx` is the context that was created by init_rdfifo(). Reads from a
+UIO device *must* always be 4 bytes long. Examples:
+
+Blocking read():
+
+	int32_t dummy;
+	read(ctx->uio_fd, &dummy, 4);
+
+With select():
+
+	fd_set read_fds;
+	int fdmax;
+	int32_t dummy;
+
+	FD_ZERO(&read_fds);
+	FD_SET(ctx->uio_fd, &read_fds);
+	fdmax = ...maximum fd in all sets + 1...
+	select(fdmax, &read_fds, ...);
+	if (FD_ISSET(ctx->uio_fd, &read_fds)) {
+		read(ctx->uio_fd, &dummy, 4);
+		...
+	}
+
+The dummy value read is actually the number of interrupts that were caught so
+far. In this application, it is not important and can be discarded. It does
+need to be read from the device file for every interrupt that is handled.
+
+Having covered /how/ to wait for an interrupt, it is critical to the correct
+operation to know /when/ to wait for an interrupt. As long as fifo_read() does
+not return the status code FIFO_NEED_MORE, do *not* read() or select()
+`ctx->uio_fd`! This includes the very first time the FIFO is read. *Only* when
+fifo_read() returns FIFO_NEED_MORE can the program be suspended by a blocking
+read() or select(). There is a chance that there is no new data in the FIFO on
+resumption, so this should not be assumed to be the case. Once resumed, keep
+calling fifo_read() until it once again returns FIFO_NEED_MORE and only then
+switch to read() or select() again.
+
+The Linux kernel documentation has a UIO HOWTO which has more information on
+using the subsystem from userspace. It is included in the kernel source code;
+Documentation/driver-api/uio-howto.rst as of this writing, or [2] on the web.
+
+
+====================
+Using the CλaSH code
+====================
+
+TODO: (apart from writing this whole section in the first place) Document the
+top entity structure "packet_fifo" and how it fits in DE10_Standard_GHRD.v .
+
+[1] https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/interrupts.txt
+	"This [interrupt-parent] property is inherited, so it may be specified
+	in an interrupt client node or in any of its parent nodes."
+
+[2] https://www.kernel.org/doc/html/latest/driver-api/uio-howto.html

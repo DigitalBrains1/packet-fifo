@@ -1,3 +1,14 @@
+{-
+ - A design that echoes any packets written to the FPGA back to the HPS.
+ -
+ - An optional transformation enables experimenting with the layout of data.
+ - Actual top entities are defined in different files for specific
+ - transformations.h
+ -
+ - Packets pass through avalonMaster, packetReader and packetWriter, verifying
+ - their basic functioning.
+ -
+ -}
 module Test.Avalon.PacketEcho.Common where
 
 import Clash.Prelude

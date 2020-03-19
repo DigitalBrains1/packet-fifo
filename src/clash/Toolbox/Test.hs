@@ -62,6 +62,13 @@ extractState mealyT is sI i = (sE,o)
  -
  - Variant of dumpVCD that writes its output to a file
  -}
+writeVCD
+    :: NFDataX a
+    => FilePath
+    -> (Int, Int)
+    -> Signal dom a
+    -> [String]
+    -> IO ()
 writeVCD fname slice signal traceNames = do
     vcd <- dumpVCD slice signal traceNames
     case vcd of
@@ -72,6 +79,12 @@ writeVCD fname slice signal traceNames = do
 {-
  - Shorthand for writeVCD with a slice of (0,2000)
  -}
+writeVCD'
+    :: NFDataX a
+    => FilePath
+    -> Signal dom a
+    -> [String]
+    -> IO ()
 writeVCD' = flip writeVCD (0,2000)
 
 {-
@@ -113,6 +126,7 @@ traceSignalT2 (n1, n2) inp = bundle (s1', s2')
 {-
  - Lift seqX to applicative for easy infix use
  -}
+seqXA :: Applicative f => f a -> f b -> f b
 seqXA = liftA2 seqX
 
 {----------------------------------------------------------------------------

@@ -27,4 +27,4 @@ mmio_read32(const void *base, size_t offset)
 	return *(volatile uint32_t *) addr_offset(base, offset);
 }
 
-#endif // ndef FILE_MMIO_H
+#endif /* ndef FILE_MMIO_H */

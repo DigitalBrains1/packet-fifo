@@ -1,3 +1,15 @@
+{-
+ - Generate a VCD file to verify waveforms are as expected.
+ -
+ - No automated testing, just manual inspection of the waveform.
+ -
+ - The `mockAvalonSlave` outputs a fixed data pattern. Manual inspection of
+ - the waveform reveals whether `packetReader` functions correctly. Tuning the
+ - first argument of `mockAvalonSlave` below tests for various delays.
+ - `packetReader` should work correctly with a combinatorial (zero-delay)
+ - Avalon slave.
+ -}
+{-# LANGUAGE MonomorphismRestriction #-}
 module Test.Avalon.PacketReader where
 
 import Clash.Prelude

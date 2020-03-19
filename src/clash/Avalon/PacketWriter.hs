@@ -4,33 +4,56 @@ import Clash.Prelude
 
 import Avalon.Master
 
+fifoDataReg :: Unsigned 3
 fifoDataReg = 0x0
+fifoOtherInfoReg :: Unsigned 3
 fifoOtherInfoReg = 0x4
 
+{-
+ - Write packets to an Intel FPGA Avalon FIFO Memory Core.
+ -
+ - Data on `pIn` is pushed onto the FIFO. `pIn` is in the same format as the
+ - data in the FIFO Memory Core. Refer to the Intel documentation for the
+ - meaning of the bits in the two words `pInData` (data) and `pInOther`
+ - (other info or packet status information).
+ -
+ - One element of packet data is transferred when both `pInReady` and
+ - `pInValid` are asserted.
+ -
+ - `opReady` and `op` connect to Avalon.Master.avalonMaster. Its `res` is
+ - unused.
+ -
+ - When backpressure is enabled in Intel Platform Designer (Qsys),
+ - `packetWriter` and `avalonMaster` will be blocked when the FIFO is full.
+ - This means `pInReady` will simply not be asserted until the FIFO has some
+ - room again.
+ -}
 packetWriter
-    :: HiddenClockResetEnable dom
-    => ( Signal dom Bool
-       -- ^ Packet in valid
-       , Signal dom (Unsigned 32)
-       -- ^ Packet in data
-       , Signal dom (Unsigned 32)
-       -- ^ Packet in other info
-       )
-    -> Signal dom Bool
+    :: forall dom . HiddenClockResetEnable dom
+    => "pIn" :::
+           ( "pInValid" ::: Signal dom Bool
+           -- ^ Packet in valid
+           , "pInData" ::: Signal dom (Unsigned 32)
+           -- ^ Packet in data
+           , "pInOther" ::: Signal dom (Unsigned 32)
+           -- ^ Packet in other info
+           )
+    -> "opReady" ::: Signal dom Bool
        -- ^ Avalon op ready
-    -> ( Signal dom Bool
+    -> ( "pInReady" ::: Signal dom Bool
        -- ^ Packet in ready
-       , ( Signal dom Bool
-         -- ^ Avalon op valid
-         , Signal dom AvalonCmd
-         -- ^ Avalon op command
-         , Signal dom ()
-         -- ^ Avalon op tag
-         , Signal dom (Unsigned 3)
-         -- ^ Avalon op address
-         , Signal dom (Unsigned 32)
-         -- ^ Avalon op data
-         )
+       , "op" :::
+           ( "opValid" ::: Signal dom Bool
+           -- ^ Avalon op valid
+           , "opCmd" ::: Signal dom AvalonCmd
+           -- ^ Avalon op command
+           , "opTag" ::: Signal dom ()
+           -- ^ Avalon op tag
+           , "opAddr" ::: Signal dom (Unsigned 3)
+           -- ^ Avalon op address
+           , "opData" ::: Signal dom (Unsigned 32)
+           -- ^ Avalon op data
+           )
        )
 
 packetWriter pIn opReady = (pInReady, op)

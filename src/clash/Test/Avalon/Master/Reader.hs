@@ -1,3 +1,11 @@
+{-
+ - A design that tests the read functionality of avalonMaster
+ -
+ - It continually reads the "fill_level FIFO Status Register" and displays its
+ - value in binary on the LEDs of the DE10 board. By writing to the FIFO from
+ - the HPS, it can be verified that reading the fill_level register works as
+ - the value on the LEDs increases.
+ -}
 module Test.Avalon.Master.Reader where
 
 import Clash.Prelude
@@ -6,7 +14,7 @@ import Avalon.Master
 
 {-# ANN avalonMasterReader
     (Synthesize
-        { t_name   = "avalon_master_test"
+        { t_name   = "packet_fifo"
         , t_inputs
             = [ PortName "clk"
               , PortName "rst_n"
@@ -21,52 +29,96 @@ import Avalon.Master
                 , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
                 ]
         }) #-}
-{-# NOINLINE avalonMasterReader #-}
+avalonMasterReader
+    :: Clock System
+    -> "rst_n" ::: Signal System Bool
+    -- ^ Active-low asynchronous reset
+    -> "fpga_debounced_buttons" ::: Signal System (BitVector 3)
+    -> "fifo_f2h_in" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_f2h_in_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_f2h_in_mm_external_interface_acknowledge
+           )
+    -> "fifo_f2h_out" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_h2f_out_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_h2f_out_mm_external_interface_acknowledge
+           )
+    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
+       , "fifo_f2h_in" :::
+             ( Signal System (Unsigned 3)
+             -- ^ fifo_f2h_in_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_f2h_in_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_f2h_in_mm_external_interface_byte_enable
+             )
+       , "fifo_f2h_out" :::
+             ( Signal System (Unsigned 6)
+             -- ^ fifo_h2f_out_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_h2f_out_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_h2f_out_mm_external_interface_byte_enable
+             )
+       )
 avalonMasterReader clk rst_n
     = exposeClockResetEnable avalonMasterReader' clk rstS enableGen
     where
         rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen
+{-# NOINLINE avalonMasterReader #-}
 
 avalonMasterReader'
     :: SystemClockResetEnable
-    => Signal System (BitVector 3)
-    -- ^ fpga_debounced_buttons
-    -> ( Signal System (Unsigned 32)
-       -- ^ fifo_f2h_in_mm_external_interface_read_data
-       , Signal System Bool
-       -- ^ fifo_f2h_in_mm_external_interface_acknowledge
+    => "fpga_debounced_buttons" ::: Signal System (BitVector 3)
+    -> "fifo_f2h_in" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_f2h_in_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_f2h_in_mm_external_interface_acknowledge
+           )
+    -> "fifo_f2h_out" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_h2f_out_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_h2f_out_mm_external_interface_acknowledge
+           )
+    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
+       , "fifo_f2h_in" :::
+             ( Signal System (Unsigned 3)
+             -- ^ fifo_f2h_in_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_f2h_in_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_f2h_in_mm_external_interface_byte_enable
+             )
+       , "fifo_f2h_out" :::
+             ( Signal System (Unsigned 6)
+             -- ^ fifo_h2f_out_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_h2f_out_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_h2f_out_mm_external_interface_byte_enable
+             )
        )
-    -> ( Signal System (Unsigned 32)
-       -- ^ fifo_h2f_out_mm_external_interface_read_data
-       , Signal System Bool
-       -- ^ fifo_h2f_out_mm_external_interface_acknowledge
-       )
-    -> ( Signal System (Unsigned 10)
-       -- ^ fpga_led_internal
-       , ( Signal System (Unsigned 3)
-         -- ^ fifo_f2h_in_mm_external_interface_address
-         , Signal System (Unsigned 32)
-         -- ^ fifo_f2h_in_mm_external_interface_write_data
-         , Signal System Bool
-         -- ^ fifo_f2h_in_mm_external_interface_read
-         , Signal System Bool
-         -- ^ fifo_f2h_in_mm_external_interface_write
-         , Signal System (BitVector 4)
-         -- ^ fifo_f2h_in_mm_external_interface_byte_enable
-         )
-       , ( Signal System (Unsigned 6)
-         -- ^ fifo_h2f_out_mm_external_interface_address
-         , Signal System (Unsigned 32)
-         -- ^ fifo_h2f_out_mm_external_interface_write_data
-         , Signal System Bool
-         -- ^ fifo_h2f_out_mm_external_interface_read
-         , Signal System Bool
-         -- ^ fifo_h2f_out_mm_external_interface_write
-         , Signal System (BitVector 4)
-         -- ^ fifo_h2f_out_mm_external_interface_byte_enable
-         )
-       )
-
 avalonMasterReader' _ f2hIn h2fIn
     = ( leds
       , f2hOut
@@ -95,20 +147,31 @@ avalonMasterReader' _ f2hIn h2fIn
 
 ledFillLevel
     :: KnownDomain dom
-    => Signal dom Bool
-    -> ( Signal dom Bool
-       , Signal dom ()
-       , Signal dom (Unsigned 32))
-    -> ( Signal dom (Unsigned 10)
-       , Signal dom Bool
-       , ( Signal dom Bool
-         , Signal dom AvalonCmd
-         , Signal dom ()
-         , Signal dom (Unsigned 6)
-         , Signal dom (Unsigned 32)
-         )
+    => "opReady" ::: Signal dom Bool
+    -> "res" :::
+        ( "resValid" ::: Signal dom Bool
+        -- ^ Result valid
+        , "resTag" ::: Signal dom ()
+        -- ^ Passthrough tag
+        , "resData" ::: Signal dom (Unsigned 32)
+        -- ^ Read data
+        )
+    -> ( "leds" ::: Signal dom (Unsigned 10)
+       , "resReady" ::: Signal dom Bool
+       -- ^ Result ready
+       , "op" :::
+           ( "opValid" ::: Signal dom Bool
+           -- ^ Operation valid
+           , "opCmd" ::: Signal dom AvalonCmd
+           -- ^ Read or write
+           , "opTag" ::: Signal dom ()
+           -- ^ Passthrough tag for request matching
+           , "opAddr" ::: Signal dom (Unsigned 6)
+           -- ^ Address
+           , "opData" ::: Signal dom (Unsigned 32)
+           -- ^ Write data
+           )
        )
-
 ledFillLevel opReady res = (leds, resReady, op)
     where
         op = (pure True, pure AvalonRead, pure (), pure 0, pure undefined)

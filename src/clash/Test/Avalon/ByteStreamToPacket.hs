@@ -1,3 +1,16 @@
+{-
+ - Generate a VCD file to verify waveforms are as expected.
+ -
+ - No automated testing, just manual inspection of the waveform.
+ -
+ - A ByteStream-format test stream is generated. Manual inspection should
+ - reveal that `packetValid`, `packetData` and `packetOther` correspond to
+ - that test stream.
+ -
+ - Note that a GTKWave save file `avbs2p.gtkw` is included for setting up the
+ - wave display.
+ -}
+{-# LANGUAGE MonomorphismRestriction #-}
 module Test.Avalon.ByteStreamToPacket where
 
 import Clash.Prelude

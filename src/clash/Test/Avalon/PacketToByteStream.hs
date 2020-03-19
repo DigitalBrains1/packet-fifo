@@ -1,3 +1,17 @@
+{-
+ - Generate a VCD file to verify waveforms are as expected.
+ -
+ - No automated testing, just manual inspection of the waveform.
+ -
+ - The `mockAvalonSlave` outputs a fixed data pattern. Manual inspection of
+ - the waveform reveals whether `packetToByteStream` functions correctly.
+ - Tuning the first argument of `mockAvalonSlave` below tests for various
+ - delays.
+ -
+ - Note that a GTKWave save file `avp2bs.gtkw` is included for setting up the
+ - wave display.
+ -}
+{-# LANGUAGE MonomorphismRestriction #-}
 module Test.Avalon.PacketToByteStream where
 
 import Clash.Prelude

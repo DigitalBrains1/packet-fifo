@@ -1,3 +1,9 @@
+{-
+ - Circuit that writes test packets to the HPS.
+ -
+ - It can be programmed to the FPGA or observed in a VCD file.
+ -}
+{-# LANGUAGE MonomorphismRestriction #-}
 module Test.Avalon.PacketWriter where
 
 import Clash.Prelude
@@ -7,6 +13,7 @@ import Avalon.PacketWriter
 import Avalon.Packet
 import Avalon.Master
 import Test.Avalon.Master.MockSlave
+import Toolbox.Misc
 import Toolbox.Test
 
 {-# ANN avalonPacketWriter
@@ -26,50 +33,95 @@ import Toolbox.Test
                 , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
                 ]
         }) #-}
-{-# NOINLINE avalonPacketWriter #-}
+avalonPacketWriter
+    :: Clock System
+    -> "rst_n" ::: Signal System Bool
+    -- ^ Active-low asynchronous reset
+    -> "fpga_debounced_buttons" ::: Signal System (BitVector 3)
+    -> "fifo_f2h_in" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_f2h_in_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_f2h_in_mm_external_interface_acknowledge
+           )
+    -> "fifo_f2h_out" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_h2f_out_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_h2f_out_mm_external_interface_acknowledge
+           )
+    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
+       , "fifo_f2h_in" :::
+             ( Signal System (Unsigned 3)
+             -- ^ fifo_f2h_in_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_f2h_in_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_f2h_in_mm_external_interface_byte_enable
+             )
+       , "fifo_f2h_out" :::
+             ( Signal System (Unsigned 6)
+             -- ^ fifo_h2f_out_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_h2f_out_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_h2f_out_mm_external_interface_byte_enable
+             )
+       )
 avalonPacketWriter clk rst_n
     = exposeClockResetEnable avalonPacketWriter' clk rstS enableGen
     where
         rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen
+{-# NOINLINE avalonPacketWriter #-}
 
 avalonPacketWriter'
     :: SystemClockResetEnable
-    => Signal System (BitVector 3)
-    -- ^ fpga_debounced_buttons
-    -> ( Signal System (Unsigned 32)
-       -- ^ fifo_f2h_in_mm_external_interface_read_data
-       , Signal System Bool
-       -- ^ fifo_f2h_in_mm_external_interface_acknowledge
-       )
-    -> ( Signal System (Unsigned 32)
-       -- ^ fifo_h2f_out_mm_external_interface_read_data
-       , Signal System Bool
-       -- ^ fifo_h2f_out_mm_external_interface_acknowledge
-       )
-    -> ( Signal System (Unsigned 10)
-       -- ^ fpga_led_internal
-       , ( Signal System (Unsigned 3)
-         -- ^ fifo_f2h_in_mm_external_interface_address
-         , Signal System (Unsigned 32)
-         -- ^ fifo_f2h_in_mm_external_interface_write_data
-         , Signal System Bool
-         -- ^ fifo_f2h_in_mm_external_interface_read
-         , Signal System Bool
-         -- ^ fifo_f2h_in_mm_external_interface_write
-         , Signal System (BitVector 4)
-         -- ^ fifo_f2h_in_mm_external_interface_byte_enable
-         )
-       , ( Signal System (Unsigned 6)
-         -- ^ fifo_h2f_out_mm_external_interface_address
-         , Signal System (Unsigned 32)
-         -- ^ fifo_h2f_out_mm_external_interface_write_data
-         , Signal System Bool
-         -- ^ fifo_h2f_out_mm_external_interface_read
-         , Signal System Bool
-         -- ^ fifo_h2f_out_mm_external_interface_write
-         , Signal System (BitVector 4)
-         -- ^ fifo_h2f_out_mm_external_interface_byte_enable
-         )
+    => "fpga_debounced_buttons" ::: Signal System (BitVector 3)
+    -> "fifo_f2h_in" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_f2h_in_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_f2h_in_mm_external_interface_acknowledge
+           )
+    -> "fifo_f2h_out" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_h2f_out_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_h2f_out_mm_external_interface_acknowledge
+           )
+    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
+       , "fifo_f2h_in" :::
+             ( Signal System (Unsigned 3)
+             -- ^ fifo_f2h_in_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_f2h_in_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_f2h_in_mm_external_interface_byte_enable
+             )
+       , "fifo_f2h_out" :::
+             ( Signal System (Unsigned 6)
+             -- ^ fifo_h2f_out_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_h2f_out_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_h2f_out_mm_external_interface_byte_enable
+             )
        )
 
 avalonPacketWriter' _ f2hIn h2fIn
@@ -91,15 +143,36 @@ avalonPacketWriter' _ f2hIn h2fIn
 
         pIn = writeDummyCounter pInReady
 
+{-
+ - Write test packet data.
+ -
+ - 128 8-byte/2-word packets are output. The two words that make up the eight
+ - bytes are incrementing from 0 to 255, split out over the 128 packets.
+ -}
 writeDummyCounter
     :: HiddenClockResetEnable dom
-    => Signal dom Bool
-    -> ( Signal dom Bool
-       , Signal dom (Unsigned 32)
-       , Signal dom (Unsigned 32)
-       )
+    => "pInReady" ::: Signal dom Bool
+    -> "pIn" :::
+           ( "pInValid" ::: Signal dom Bool
+           -- ^ Stream-in valid
+           , "pInData" ::: Signal dom (Unsigned 32)
+           -- ^ Stream-in data
+           , "pInOther" ::: Signal dom (Unsigned 32)
+           -- ^ Stream-in other info
+           )
 writeDummyCounter pInReady
     = mealyB writeDummyCounter' 0 pInReady
+
+writeDummyCounter'
+    :: Mealy ( "s" ::: "cnt" ::: Unsigned 32)
+             ( "i" ::: "pInReady" ::: Bool)
+             ( "o" :::
+                 "pIn" :::
+                     ( "pInValid" ::: Bool
+                     , "pInData" ::: Unsigned 32
+                     , "pinOther" ::: Unsigned 32
+                     )
+             )
 
 writeDummyCounter' cnt pInReady
     = (cnt', (pInValid, cnt, other))
@@ -112,6 +185,16 @@ writeDummyCounter' cnt pInReady
         other | lsb cnt == 0 = bit fifoInfoSOP
               | otherwise    = bit fifoInfoEOP
 
+{-
+ - Add signal tracing to avalonPacketWriter.
+ -
+ - In order to enable making a VCD file, traces are set on the connections to
+ - the External Bus to Avalon Bridge.
+ -
+ - The output signal's only purpose is to force certain signals to be
+ - evaluated during simulation. It is possible this is leftover code that is
+ - no longer necessary.
+ -}
 mockTopEntity
     :: Signal System Bool
 
@@ -138,6 +221,7 @@ mockTopEntity = f2hRData' `seqXA` f2hAck'
                 clockGen resetGen enableGen
                 mockAvalonSlave d3 f2hOut'
 
+makeVCD :: IO ()
 makeVCD
     = writeVCD' "avpw.vcd"
         mockTopEntity

@@ -1,3 +1,22 @@
+/*
+ * Functions for transferring packet data over an Intel FPGA Avalon FIFO
+ * Memory Core.
+ *
+ * (C) Copyright 2019,2020 QBayLogic B.V.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -23,6 +42,14 @@ match_uio_attr(const struct uio_info_t *info, const char *name,
 	return 0;
 }
 
+/*
+ * In uevent files, the kernel might number an attribute that can have
+ * multiple values. This function checks any of the numbered entries for
+ * equality. With `name` = 'uevent/OF_ALIAS_', it will check if there is an
+ * entry that has value `value` under all entries with names
+ * 'uevent/OF_ALIAS_0', 'uevent/OF_ALIAS_1', etcetera, for all decimal values
+ * 0, 1, etcetera.
+ */
 static int
 match_uio_attr_n(const struct uio_info_t *info, const char *name,
 		const char *value)
