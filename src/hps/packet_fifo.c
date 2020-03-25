@@ -88,6 +88,7 @@ get_of_fullname(const struct uio_info_t *info)
 struct uio_info_t *
 fifo_uio_by_of_name(const struct uio_info_t *info, const char *of_name)
 {
+	/* TODO: We should check the uio device version number as well */
 	const char prefix[] = "altera_fifo_";
 	while (info) {
 		if (strncmp(info->name, prefix, strlen(prefix))) {
