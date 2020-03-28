@@ -192,6 +192,7 @@ main(int argc, char *argv[])
 	}
 
 	strncpy(dev, argv[1], IFNAMSIZ);
+	dev[IFNAMSIZ-1] = '\0';
 	//dev[0] = '\0';
 	if ((fd1 = tun_alloc(dev)) < 0) {
 		printf("tun_alloc err");

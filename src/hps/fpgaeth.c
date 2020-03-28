@@ -107,7 +107,7 @@ handle_tun_packet(const int tunfd, struct fifo_mapped_reg *h2f_ctx)
 int
 main(int argc, char *argv[])
 {
-	char dev[IFNAMSIZ+1];
+	char dev[IFNAMSIZ];
 	struct rdfifo_ctx *f2h_ctx;
 	struct fifo_mapped_reg *h2f_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
@@ -153,6 +153,7 @@ main(int argc, char *argv[])
 	uio_free_info(uio_list);
 
 	strncpy(dev, argv[1], IFNAMSIZ);
+	dev[IFNAMSIZ-1] = '\0';
 	if ((tunfd = tun_alloc(dev)) < 0) {
 		printf("tun_alloc err");
 		exit(1);
