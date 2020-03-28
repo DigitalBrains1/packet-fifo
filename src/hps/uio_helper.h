@@ -3,6 +3,7 @@
    UIO helper functions - header file.
 
    Copyright (C) 2007 Hans J. Koch
+   Copyright (C) 2020 QBayLogic B.V.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License version 2 as

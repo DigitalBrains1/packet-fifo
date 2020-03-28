@@ -198,6 +198,7 @@ static struct uio_dev_attr_t *uio_get_uevent_attributes(char *filename,
 		if (s1) {
 			s2 = strsep(&s1, "\n");
 			strncpy(attr->value, s2, sizeof(attr->value));
+			attr->value[sizeof(attr->value)-1] = '\0';
 		} else {
 			attr->value[0] = '\0';
 		}
@@ -218,7 +219,6 @@ static struct uio_dev_attr_t *uio_get_uevent_attributes(char *filename,
 		attr->value[0] = '\0';
 		*link = attr;
 		attr->next = NULL;
-		link = &attr->next;
 	}
 
 	fclose(file);
@@ -409,3 +409,4 @@ void uio_mmap_test(struct uio_info_t* info)
 	for (map_num= 0; map_num < MAX_UIO_MAPS; map_num++)
 		uio_single_mmap_test(info, map_num);
 }
+
