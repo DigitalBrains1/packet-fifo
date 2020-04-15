@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="soc_system" kind="soc_system" version="1.0" fabric="QSYS">
  <!-- Format version 18.1 625 (Future versions may contain additional information.) -->
- <!-- 2020.03.12.17:24:47 -->
+ <!-- 2020.04.15.17:00:50 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1584030270</value>
+  <value>1586962832</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -6321,7 +6321,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.USE_WRITE_CONTROL</name>
-   <value>0</value>
+   <value>1</value>
   </assignment>
   <parameter name="avalonMMAvalonMMDataWidth">
    <type>int</type>
@@ -6431,7 +6431,7 @@ the requested settings for a module instance. -->
    <type>boolean</type>
    <value>false</value>
    <derived>false</derived>
-   <enabled>false</enabled>
+   <enabled>true</enabled>
    <visible>true</visible>
    <valid>true</valid>
   </parameter>
@@ -6461,7 +6461,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="useWriteControl">
    <type>boolean</type>
-   <value>false</value>
+   <value>true</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -7122,6 +7122,371 @@ parameters are a RESULT of the module parameters. -->
     <direction>Output</direction>
     <width>2</width>
     <role>empty</role>
+   </port>
+  </interface>
+  <interface name="in_csr" kind="avalon_slave" version="18.1">
+   <!-- The connection points exposed by a module instance for the
+particular module parameters. Connection points and their
+parameters are a RESULT of the module parameters. -->
+   <assignment>
+    <name>embeddedsw.configuration.isFlash</name>
+    <value>0</value>
+   </assignment>
+   <assignment>
+    <name>embeddedsw.configuration.isMemoryDevice</name>
+    <value>0</value>
+   </assignment>
+   <assignment>
+    <name>embeddedsw.configuration.isNonVolatileStorage</name>
+    <value>0</value>
+   </assignment>
+   <assignment>
+    <name>embeddedsw.configuration.isPrintableDevice</name>
+    <value>0</value>
+   </assignment>
+   <parameter name="addressAlignment">
+    <type>com.altera.sopcmodel.avalon.AvalonConnectionPoint$AddressAlignment</type>
+    <value>DYNAMIC</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="addressGroup">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="addressSpan">
+    <type>java.math.BigInteger</type>
+    <value>32</value>
+    <derived>true</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="addressUnits">
+    <type>com.altera.sopcmodel.avalon.EAddrBurstUnits</type>
+    <value>WORDS</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="alwaysBurstMaxBurst">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="associatedClock">
+    <type>java.lang.String</type>
+    <value>clk_in</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="associatedReset">
+    <type>java.lang.String</type>
+    <value>reset_in</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="bitsPerSymbol">
+    <type>int</type>
+    <value>8</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="bridgedAddressOffset">
+    <type>java.math.BigInteger</type>
+    <value></value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="bridgesToMaster">
+    <type>com.altera.entityinterfaces.IConnectionPoint</type>
+    <value></value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="burstOnBurstBoundariesOnly">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="burstcountUnits">
+    <type>com.altera.sopcmodel.avalon.EAddrBurstUnits</type>
+    <value>WORDS</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="constantBurstBehavior">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="explicitAddressSpan">
+    <type>java.math.BigInteger</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="holdTime">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="interleaveBursts">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="isBigEndian">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="isFlash">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="isMemoryDevice">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="isNonVolatileStorage">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="linewrapBursts">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="maximumPendingReadTransactions">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>false</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="maximumPendingWriteTransactions">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>false</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="minimumUninterruptedRunLength">
+    <type>int</type>
+    <value>1</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="printableDevice">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="readLatency">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="readWaitStates">
+    <type>int</type>
+    <value>1</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="readWaitTime">
+    <type>int</type>
+    <value>1</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="registerIncomingSignals">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="registerOutgoingSignals">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="setupTime">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="timingUnits">
+    <type>com.altera.sopcmodel.avalon.TimingUnits</type>
+    <value>Cycles</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="transparentBridge">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="wellBehavedWaitrequest">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="writeLatency">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="writeWaitStates">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>false</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="writeWaitTime">
+    <type>int</type>
+    <value>0</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="deviceFamily">
+    <type>java.lang.String</type>
+    <value>UNKNOWN</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <parameter name="generateLegacySim">
+    <type>boolean</type>
+    <value>false</value>
+    <derived>false</derived>
+    <enabled>true</enabled>
+    <visible>true</visible>
+    <valid>true</valid>
+   </parameter>
+   <type>avalon</type>
+   <isStart>false</isStart>
+   <port>
+    <name>wrclk_control_slave_address</name>
+    <direction>Input</direction>
+    <width>3</width>
+    <role>address</role>
+   </port>
+   <port>
+    <name>wrclk_control_slave_read</name>
+    <direction>Input</direction>
+    <width>1</width>
+    <role>read</role>
+   </port>
+   <port>
+    <name>wrclk_control_slave_writedata</name>
+    <direction>Input</direction>
+    <width>32</width>
+    <role>writedata</role>
+   </port>
+   <port>
+    <name>wrclk_control_slave_write</name>
+    <direction>Input</direction>
+    <width>1</width>
+    <role>write</role>
+   </port>
+   <port>
+    <name>wrclk_control_slave_readdata</name>
+    <direction>Output</direction>
+    <width>32</width>
+    <role>readdata</role>
    </port>
   </interface>
  </module>
@@ -25944,14 +26309,14 @@ parameters are a RESULT of the module parameters. -->
     <slaveName>s0</slaveName>
     <name>mm_bridge_1.s0</name>
     <baseAddress>0</baseAddress>
-    <span>16384</span>
+    <span>8192</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>fifo_h2f_in</moduleName>
     <slaveName>in</slaveName>
     <name>fifo_h2f_in.in</name>
-    <baseAddress>4096</baseAddress>
+    <baseAddress>32</baseAddress>
     <span>8</span>
    </memoryBlock>
    <memoryBlock>
@@ -25959,7 +26324,15 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>in_csr</slaveName>
     <name>fifo_f2h_out.in_csr</name>
-    <baseAddress>8192</baseAddress>
+    <baseAddress>4096</baseAddress>
+    <span>32</span>
+   </memoryBlock>
+   <memoryBlock>
+    <isBridge>false</isBridge>
+    <moduleName>fifo_h2f_in</moduleName>
+    <slaveName>in_csr</slaveName>
+    <name>fifo_h2f_in.in_csr</name>
+    <baseAddress>0</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -25967,7 +26340,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>out</slaveName>
     <name>fifo_f2h_out.out</name>
-    <baseAddress>8224</baseAddress>
+    <baseAddress>4128</baseAddress>
     <span>8</span>
    </memoryBlock>
   </interface>
@@ -53404,14 +53777,14 @@ parameters are a RESULT of the module parameters. -->
     <slaveName>s0</slaveName>
     <name>mm_bridge_1.s0</name>
     <baseAddress>0</baseAddress>
-    <span>16384</span>
+    <span>8192</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>fifo_h2f_in</moduleName>
     <slaveName>in</slaveName>
     <name>fifo_h2f_in.in</name>
-    <baseAddress>4096</baseAddress>
+    <baseAddress>32</baseAddress>
     <span>8</span>
    </memoryBlock>
    <memoryBlock>
@@ -53419,7 +53792,15 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>in_csr</slaveName>
     <name>fifo_f2h_out.in_csr</name>
-    <baseAddress>8192</baseAddress>
+    <baseAddress>4096</baseAddress>
+    <span>32</span>
+   </memoryBlock>
+   <memoryBlock>
+    <isBridge>false</isBridge>
+    <moduleName>fifo_h2f_in</moduleName>
+    <slaveName>in_csr</slaveName>
+    <name>fifo_h2f_in.in_csr</name>
+    <baseAddress>0</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -53427,7 +53808,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>out</slaveName>
     <name>fifo_f2h_out.out</name>
-    <baseAddress>8224</baseAddress>
+    <baseAddress>4128</baseAddress>
     <span>8</span>
    </memoryBlock>
   </interface>
@@ -55809,14 +56190,14 @@ parameters are a RESULT of the module parameters. -->
     <slaveName>s0</slaveName>
     <name>mm_bridge_1.s0</name>
     <baseAddress>3221225472</baseAddress>
-    <span>16384</span>
+    <span>8192</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>fifo_h2f_in</moduleName>
     <slaveName>in</slaveName>
     <name>fifo_h2f_in.in</name>
-    <baseAddress>3221229568</baseAddress>
+    <baseAddress>3221225504</baseAddress>
     <span>8</span>
    </memoryBlock>
    <memoryBlock>
@@ -55824,7 +56205,15 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>in_csr</slaveName>
     <name>fifo_f2h_out.in_csr</name>
-    <baseAddress>3221233664</baseAddress>
+    <baseAddress>3221229568</baseAddress>
+    <span>32</span>
+   </memoryBlock>
+   <memoryBlock>
+    <isBridge>false</isBridge>
+    <moduleName>fifo_h2f_in</moduleName>
+    <slaveName>in_csr</slaveName>
+    <name>fifo_h2f_in.in_csr</name>
+    <baseAddress>3221225472</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -55832,7 +56221,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>out</slaveName>
     <name>fifo_f2h_out.out</name>
-    <baseAddress>3221233696</baseAddress>
+    <baseAddress>3221229600</baseAddress>
     <span>8</span>
    </memoryBlock>
    <memoryBlock>
@@ -56720,14 +57109,14 @@ parameters are a RESULT of the module parameters. -->
     <slaveName>s0</slaveName>
     <name>mm_bridge_1.s0</name>
     <baseAddress>3221225472</baseAddress>
-    <span>16384</span>
+    <span>8192</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>fifo_h2f_in</moduleName>
     <slaveName>in</slaveName>
     <name>fifo_h2f_in.in</name>
-    <baseAddress>3221229568</baseAddress>
+    <baseAddress>3221225504</baseAddress>
     <span>8</span>
    </memoryBlock>
    <memoryBlock>
@@ -56735,7 +57124,15 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>in_csr</slaveName>
     <name>fifo_f2h_out.in_csr</name>
-    <baseAddress>3221233664</baseAddress>
+    <baseAddress>3221229568</baseAddress>
+    <span>32</span>
+   </memoryBlock>
+   <memoryBlock>
+    <isBridge>false</isBridge>
+    <moduleName>fifo_h2f_in</moduleName>
+    <slaveName>in_csr</slaveName>
+    <name>fifo_h2f_in.in_csr</name>
+    <baseAddress>3221225472</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -56743,7 +57140,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>out</slaveName>
     <name>fifo_f2h_out.out</name>
-    <baseAddress>3221233696</baseAddress>
+    <baseAddress>3221229600</baseAddress>
     <span>8</span>
    </memoryBlock>
    <memoryBlock>
@@ -87881,7 +88278,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="SYSINFO_ADDR_WIDTH">
    <type>int</type>
-   <value>14</value>
+   <value>13</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>false</visible>
@@ -87899,7 +88296,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="AUTO_ADDRESS_WIDTH">
    <type>int</type>
-   <value>14</value>
+   <value>13</value>
    <derived>true</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -87907,7 +88304,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="HDL_ADDR_WIDTH">
    <type>int</type>
-   <value>14</value>
+   <value>13</value>
    <derived>true</derived>
    <enabled>true</enabled>
    <visible>false</visible>
@@ -88117,7 +88514,7 @@ parameters are a RESULT of the module parameters. -->
    </parameter>
    <parameter name="addressSpan">
     <type>java.math.BigInteger</type>
-    <value>16384</value>
+    <value>8192</value>
     <derived>true</derived>
     <enabled>true</enabled>
     <visible>false</visible>
@@ -88446,7 +88843,7 @@ parameters are a RESULT of the module parameters. -->
    <port>
     <name>s0_address</name>
     <direction>Input</direction>
-    <width>14</width>
+    <width>13</width>
     <role>address</role>
    </port>
    <port>
@@ -88769,7 +89166,7 @@ parameters are a RESULT of the module parameters. -->
    <port>
     <name>m0_address</name>
     <direction>Output</direction>
-    <width>14</width>
+    <width>13</width>
     <role>address</role>
    </port>
    <port>
@@ -88801,7 +89198,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_h2f_in</moduleName>
     <slaveName>in</slaveName>
     <name>fifo_h2f_in.in</name>
-    <baseAddress>4096</baseAddress>
+    <baseAddress>32</baseAddress>
     <span>8</span>
    </memoryBlock>
    <memoryBlock>
@@ -88809,7 +89206,15 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>in_csr</slaveName>
     <name>fifo_f2h_out.in_csr</name>
-    <baseAddress>8192</baseAddress>
+    <baseAddress>4096</baseAddress>
+    <span>32</span>
+   </memoryBlock>
+   <memoryBlock>
+    <isBridge>false</isBridge>
+    <moduleName>fifo_h2f_in</moduleName>
+    <slaveName>in_csr</slaveName>
+    <name>fifo_h2f_in.in_csr</name>
+    <baseAddress>0</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -88817,7 +89222,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>fifo_f2h_out</moduleName>
     <slaveName>out</slaveName>
     <name>fifo_f2h_out.out</name>
-    <baseAddress>8224</baseAddress>
+    <baseAddress>4128</baseAddress>
     <span>8</span>
    </memoryBlock>
   </interface>
@@ -88835,7 +89240,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.TIMESTAMP</name>
-   <value>1584030270</value>
+   <value>1586962832</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.compatible</name>
@@ -88855,7 +89260,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.dts.params.timestamp</name>
-   <value>1584030270</value>
+   <value>1586962832</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.vendor</name>
@@ -88871,7 +89276,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="timestamp">
    <type>int</type>
-   <value>1584030270</value>
+   <value>1586962832</value>
    <derived>true</derived>
    <enabled>false</enabled>
    <visible>false</visible>
@@ -99878,7 +100283,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x1000</value>
+   <value>0x0020</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -99929,7 +100334,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x2000</value>
+   <value>0x1000</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -99965,6 +100370,57 @@ parameters are a RESULT of the module parameters. -->
   <endConnectionPoint>in_csr</endConnectionPoint>
  </connection>
  <connection
+   name="mm_bridge_1.m0/fifo_h2f_in.in_csr"
+   kind="avalon"
+   version="18.1"
+   start="mm_bridge_1.m0"
+   end="fifo_h2f_in.in_csr">
+  <parameter name="arbitrationPriority">
+   <type>int</type>
+   <value>1</value>
+   <derived>false</derived>
+   <enabled>true</enabled>
+   <visible>true</visible>
+   <valid>true</valid>
+  </parameter>
+  <parameter name="baseAddress">
+   <type>java.math.BigInteger</type>
+   <value>0x0000</value>
+   <derived>false</derived>
+   <enabled>true</enabled>
+   <visible>true</visible>
+   <valid>true</valid>
+  </parameter>
+  <parameter name="defaultConnection">
+   <type>boolean</type>
+   <value>false</value>
+   <derived>false</derived>
+   <enabled>true</enabled>
+   <visible>true</visible>
+   <valid>true</valid>
+  </parameter>
+  <parameter name="deviceFamily">
+   <type>java.lang.String</type>
+   <value>UNKNOWN</value>
+   <derived>false</derived>
+   <enabled>true</enabled>
+   <visible>true</visible>
+   <valid>true</valid>
+  </parameter>
+  <parameter name="generateLegacySim">
+   <type>boolean</type>
+   <value>false</value>
+   <derived>false</derived>
+   <enabled>true</enabled>
+   <visible>true</visible>
+   <valid>true</valid>
+  </parameter>
+  <startModule>mm_bridge_1</startModule>
+  <startConnectionPoint>m0</startConnectionPoint>
+  <endModule>fifo_h2f_in</endModule>
+  <endConnectionPoint>in_csr</endConnectionPoint>
+ </connection>
+ <connection
    name="mm_bridge_1.m0/fifo_f2h_out.out"
    kind="avalon"
    version="18.1"
@@ -99980,7 +100436,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x2020</value>
+   <value>0x1020</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -101934,7 +102390,7 @@ parameters are a RESULT of the module parameters. -->
   <version>18.1</version>
  </plugin>
  <plugin>
-  <instanceCount>16</instanceCount>
+  <instanceCount>17</instanceCount>
   <name>avalon_slave</name>
   <type>com.altera.entityinterfaces.IElementClass</type>
   <subtype>com.altera.entityinterfaces.IMutableConnectionPoint</subtype>
@@ -102390,7 +102846,7 @@ parameters are a RESULT of the module parameters. -->
   <version>18.1</version>
  </plugin>
  <plugin>
-  <instanceCount>152</instanceCount>
+  <instanceCount>153</instanceCount>
   <name>avalon</name>
   <type>com.altera.entityinterfaces.IElementClass</type>
   <subtype>com.altera.entityinterfaces.IConnection</subtype>

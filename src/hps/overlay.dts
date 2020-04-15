@@ -16,23 +16,26 @@
 				reg-names = "axi_h2f", "axi_h2f_lw";
 				#address-cells = <2>;
 				#size-cells = <1>;
-				ranges = <0x00000000 0x00001000 0xc0001000 0x00000008>,
-					<0x00000000 0x00002000 0xc0002000 0x00000020>,
-					<0x00000000 0x00002020 0xc0002020 0x00000008>,
+				ranges = <0x00000000 0x00000020 0xc0000020 0x00000008>,
+					<0x00000000 0x00001000 0xc0001000 0x00000020>,
+					<0x00000000 0x00000000 0xc0000000 0x00000020>,
+					<0x00000000 0x00001020 0xc0001020 0x00000008>,
 					<0x00000001 0x00000000 0xff200000 0x00040000>;
 
-				fifo_h2f_in: fifo@0x000001000 {
+				fifo_h2f_in: fifo@0x000000020 {
 					compatible = "altr,fifo-18.1", "altr,fifo-1.0";
-					reg = <0x00000000 0x00001000 0x00000008>;
-				}; //end fifo@0x000001000 (fifo_h2f_in)
+					reg = <0x00000000 0x00000020 0x00000008>,
+						<0x00000000 0x00000000 0x00000020>;
+					reg-names = "in", "in_csr";
+				}; //end fifo@0x000000020 (fifo_h2f_in)
 
-				fifo_f2h_out: fifo@0x000002000 {
+				fifo_f2h_out: fifo@0x000001000 {
 					compatible = "altr,fifo-18.1", "altr,fifo-1.0";
-					reg = <0x00000000 0x00002020 0x00000008>,
-						<0x00000000 0x00002000 0x00000020>;
+					reg = <0x00000000 0x00001020 0x00000008>,
+						<0x00000000 0x00001000 0x00000020>;
 					reg-names = "out", "in_csr";
 					interrupts = <0 43 4>;
-				}; //end fifo@0x000002000 (fifo_f2h_out)
+				}; //end fifo@0x000001000 (fifo_f2h_out)
 
 				mm_bridge_0: bridge@0x100000000 {
 					compatible = "altr,avalon-18.1", "simple-bus";
@@ -66,7 +69,7 @@
 						compatible = "altr,sysid-18.1", "altr,sysid-1.0";
 						reg = <0x00001000 0x00000008>;
 						id = <2899645186>;	/* embeddedsw.dts.params.id type NUMBER */
-						timestamp = <1584030270>;	/* embeddedsw.dts.params.timestamp type NUMBER */
+						timestamp = <1586962832>;	/* embeddedsw.dts.params.timestamp type NUMBER */
 					}; //end sysid@0x1000 (sysid_qsys)
 
 					button_pio: gpio@0x5000 {
@@ -113,8 +116,8 @@
 	fragment@1 {
 		target-path="/aliases";
 		__overlay__ {
-			fifo-h2f0 = "/soc/bridge@0xc0000000/fifo@0x000001000";
-			fifo-f2h0 = "/soc/bridge@0xc0000000/fifo@0x000002000";
+			fifo-h2f0 = "/soc/bridge@0xc0000000/fifo@0x000000020";
+			fifo-f2h0 = "/soc/bridge@0xc0000000/fifo@0x000001000";
 		};
 	};
 };

@@ -1,4 +1,4 @@
-//Legal Notice: (C)2019 Altera Corporation. All rights reserved.  Your
+//Legal Notice: (C)2020 Altera Corporation. All rights reserved.  Your
 //use of Altera Corporation's design tools, logic functions and other
 //software and tools, and its AMPP partner logic functions, and any
 //output files any of the foregoing (including device programming or
@@ -29,13 +29,15 @@ module soc_system_fifo_h2f_in_single_clock_fifo (
                                                   // outputs:
                                                    empty,
                                                    full,
-                                                   q
+                                                   q,
+                                                   usedw
                                                 )
 ;
 
   output           empty;
   output           full;
   output  [ 31: 0] q;
+  output  [  2: 0] usedw;
   input            aclr;
   input            clock;
   input   [ 31: 0] data;
@@ -46,6 +48,7 @@ module soc_system_fifo_h2f_in_single_clock_fifo (
 wire             empty;
 wire             full;
 wire    [ 31: 0] q;
+wire    [  2: 0] usedw;
   scfifo single_clock_fifo
     (
       .aclr (aclr),
@@ -55,6 +58,7 @@ wire    [ 31: 0] q;
       .full (full),
       .q (q),
       .rdreq (rdreq),
+      .usedw (usedw),
       .wrreq (wrreq)
     );
 
@@ -87,28 +91,87 @@ module soc_system_fifo_h2f_in_scfifo_with_controls (
                                                       data,
                                                       rdreq,
                                                       reset_n,
+                                                      wrclk_control_slave_address,
+                                                      wrclk_control_slave_read,
+                                                      wrclk_control_slave_write,
+                                                      wrclk_control_slave_writedata,
                                                       wrreq,
 
                                                      // outputs:
                                                       empty,
                                                       full,
-                                                      q
+                                                      q,
+                                                      wrclk_control_slave_readdata
                                                    )
 ;
 
   output           empty;
   output           full;
   output  [ 31: 0] q;
+  output  [ 31: 0] wrclk_control_slave_readdata;
   input            clock;
   input   [ 31: 0] data;
   input            rdreq;
   input            reset_n;
+  input   [  2: 0] wrclk_control_slave_address;
+  input            wrclk_control_slave_read;
+  input            wrclk_control_slave_write;
+  input   [ 31: 0] wrclk_control_slave_writedata;
   input            wrreq;
 
 
 wire             empty;
 wire             full;
+wire    [  3: 0] level;
+wire             overflow;
 wire    [ 31: 0] q;
+wire             underflow;
+wire    [  2: 0] usedw;
+reg              wrclk_control_slave_almostempty_n_reg;
+wire             wrclk_control_slave_almostempty_pulse;
+wire             wrclk_control_slave_almostempty_signal;
+reg     [  3: 0] wrclk_control_slave_almostempty_threshold_register;
+reg              wrclk_control_slave_almostfull_n_reg;
+wire             wrclk_control_slave_almostfull_pulse;
+wire             wrclk_control_slave_almostfull_signal;
+reg     [  3: 0] wrclk_control_slave_almostfull_threshold_register;
+reg              wrclk_control_slave_empty_n_reg;
+wire             wrclk_control_slave_empty_pulse;
+wire             wrclk_control_slave_empty_signal;
+reg              wrclk_control_slave_event_almostempty_q;
+wire             wrclk_control_slave_event_almostempty_signal;
+reg              wrclk_control_slave_event_almostfull_q;
+wire             wrclk_control_slave_event_almostfull_signal;
+reg              wrclk_control_slave_event_empty_q;
+wire             wrclk_control_slave_event_empty_signal;
+reg              wrclk_control_slave_event_full_q;
+wire             wrclk_control_slave_event_full_signal;
+reg              wrclk_control_slave_event_overflow_q;
+wire             wrclk_control_slave_event_overflow_signal;
+wire    [  5: 0] wrclk_control_slave_event_register;
+reg              wrclk_control_slave_event_underflow_q;
+wire             wrclk_control_slave_event_underflow_signal;
+reg              wrclk_control_slave_full_n_reg;
+wire             wrclk_control_slave_full_pulse;
+wire             wrclk_control_slave_full_signal;
+reg     [  5: 0] wrclk_control_slave_ienable_register;
+wire    [  3: 0] wrclk_control_slave_level_register;
+wire    [ 31: 0] wrclk_control_slave_read_mux;
+reg     [ 31: 0] wrclk_control_slave_readdata;
+reg              wrclk_control_slave_status_almostempty_q;
+wire             wrclk_control_slave_status_almostempty_signal;
+reg              wrclk_control_slave_status_almostfull_q;
+wire             wrclk_control_slave_status_almostfull_signal;
+reg              wrclk_control_slave_status_empty_q;
+wire             wrclk_control_slave_status_empty_signal;
+reg              wrclk_control_slave_status_full_q;
+wire             wrclk_control_slave_status_full_signal;
+reg              wrclk_control_slave_status_overflow_q;
+wire             wrclk_control_slave_status_overflow_signal;
+wire    [  5: 0] wrclk_control_slave_status_register;
+reg              wrclk_control_slave_status_underflow_q;
+wire             wrclk_control_slave_status_underflow_signal;
+wire    [  3: 0] wrclk_control_slave_threshold_writedata;
   //the_scfifo, which is an e_instance
   soc_system_fifo_h2f_in_single_clock_fifo the_scfifo
     (
@@ -119,8 +182,265 @@ wire    [ 31: 0] q;
       .full  (full),
       .q     (q),
       .rdreq (rdreq),
+      .usedw (usedw),
       .wrreq (wrreq)
     );
+
+  assign level = {full,
+    usedw};
+
+  assign overflow = wrreq & full;
+  assign underflow = rdreq & empty;
+  assign wrclk_control_slave_threshold_writedata = (wrclk_control_slave_writedata < 1) ? 1 :
+    (wrclk_control_slave_writedata > 7) ? 7 :
+    wrclk_control_slave_writedata[3 : 0];
+
+  assign wrclk_control_slave_event_almostfull_signal = wrclk_control_slave_almostfull_pulse;
+  assign wrclk_control_slave_event_almostempty_signal = wrclk_control_slave_almostempty_pulse;
+  assign wrclk_control_slave_status_almostfull_signal = wrclk_control_slave_almostfull_signal;
+  assign wrclk_control_slave_status_almostempty_signal = wrclk_control_slave_almostempty_signal;
+  assign wrclk_control_slave_event_full_signal = wrclk_control_slave_full_pulse;
+  assign wrclk_control_slave_event_empty_signal = wrclk_control_slave_empty_pulse;
+  assign wrclk_control_slave_status_full_signal = wrclk_control_slave_full_signal;
+  assign wrclk_control_slave_status_empty_signal = wrclk_control_slave_empty_signal;
+  assign wrclk_control_slave_event_overflow_signal = overflow;
+  assign wrclk_control_slave_event_underflow_signal = underflow;
+  assign wrclk_control_slave_status_overflow_signal = overflow;
+  assign wrclk_control_slave_status_underflow_signal = underflow;
+  assign wrclk_control_slave_empty_signal = empty;
+  assign wrclk_control_slave_empty_pulse = wrclk_control_slave_empty_signal & wrclk_control_slave_empty_n_reg;
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_empty_n_reg <= 0;
+      else 
+        wrclk_control_slave_empty_n_reg <= !wrclk_control_slave_empty_signal;
+    end
+
+
+  assign wrclk_control_slave_full_signal = full;
+  assign wrclk_control_slave_full_pulse = wrclk_control_slave_full_signal & wrclk_control_slave_full_n_reg;
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_full_n_reg <= 0;
+      else 
+        wrclk_control_slave_full_n_reg <= !wrclk_control_slave_full_signal;
+    end
+
+
+  assign wrclk_control_slave_almostempty_signal = level <= wrclk_control_slave_almostempty_threshold_register;
+  assign wrclk_control_slave_almostempty_pulse = wrclk_control_slave_almostempty_signal & wrclk_control_slave_almostempty_n_reg;
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_almostempty_n_reg <= 0;
+      else 
+        wrclk_control_slave_almostempty_n_reg <= !wrclk_control_slave_almostempty_signal;
+    end
+
+
+  assign wrclk_control_slave_almostfull_signal = level >= wrclk_control_slave_almostfull_threshold_register;
+  assign wrclk_control_slave_almostfull_pulse = wrclk_control_slave_almostfull_signal & wrclk_control_slave_almostfull_n_reg;
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_almostfull_n_reg <= 0;
+      else 
+        wrclk_control_slave_almostfull_n_reg <= !wrclk_control_slave_almostfull_signal;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_almostempty_threshold_register <= 1;
+      else if ((wrclk_control_slave_address == 5) & wrclk_control_slave_write)
+          wrclk_control_slave_almostempty_threshold_register <= wrclk_control_slave_threshold_writedata;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_almostfull_threshold_register <= 7;
+      else if ((wrclk_control_slave_address == 4) & wrclk_control_slave_write)
+          wrclk_control_slave_almostfull_threshold_register <= wrclk_control_slave_threshold_writedata;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_ienable_register <= 0;
+      else if ((wrclk_control_slave_address == 3) & wrclk_control_slave_write)
+          wrclk_control_slave_ienable_register <= wrclk_control_slave_writedata[5 : 0];
+    end
+
+
+  assign wrclk_control_slave_level_register = level;
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_event_underflow_q <= 0;
+      else if (wrclk_control_slave_write & 
+                               (wrclk_control_slave_address == 2) &
+                               wrclk_control_slave_writedata[5])
+          wrclk_control_slave_event_underflow_q <= 0;
+      else if (wrclk_control_slave_event_underflow_signal)
+          wrclk_control_slave_event_underflow_q <= -1;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_event_overflow_q <= 0;
+      else if (wrclk_control_slave_write & 
+                               (wrclk_control_slave_address == 2) &
+                               wrclk_control_slave_writedata[4])
+          wrclk_control_slave_event_overflow_q <= 0;
+      else if (wrclk_control_slave_event_overflow_signal)
+          wrclk_control_slave_event_overflow_q <= -1;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_event_almostempty_q <= 0;
+      else if (wrclk_control_slave_write & 
+                               (wrclk_control_slave_address == 2) &
+                               wrclk_control_slave_writedata[3])
+          wrclk_control_slave_event_almostempty_q <= 0;
+      else if (wrclk_control_slave_event_almostempty_signal)
+          wrclk_control_slave_event_almostempty_q <= -1;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_event_almostfull_q <= 0;
+      else if (wrclk_control_slave_write & 
+                               (wrclk_control_slave_address == 2) &
+                               wrclk_control_slave_writedata[2])
+          wrclk_control_slave_event_almostfull_q <= 0;
+      else if (wrclk_control_slave_event_almostfull_signal)
+          wrclk_control_slave_event_almostfull_q <= -1;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_event_empty_q <= 0;
+      else if (wrclk_control_slave_write & 
+                               (wrclk_control_slave_address == 2) &
+                               wrclk_control_slave_writedata[1])
+          wrclk_control_slave_event_empty_q <= 0;
+      else if (wrclk_control_slave_event_empty_signal)
+          wrclk_control_slave_event_empty_q <= -1;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_event_full_q <= 0;
+      else if (wrclk_control_slave_write & 
+                               (wrclk_control_slave_address == 2) &
+                               wrclk_control_slave_writedata[0])
+          wrclk_control_slave_event_full_q <= 0;
+      else if (wrclk_control_slave_event_full_signal)
+          wrclk_control_slave_event_full_q <= -1;
+    end
+
+
+  assign wrclk_control_slave_event_register = {wrclk_control_slave_event_underflow_q,
+    wrclk_control_slave_event_overflow_q,
+    wrclk_control_slave_event_almostempty_q,
+    wrclk_control_slave_event_almostfull_q,
+    wrclk_control_slave_event_empty_q,
+    wrclk_control_slave_event_full_q};
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_status_underflow_q <= 0;
+      else 
+        wrclk_control_slave_status_underflow_q <= wrclk_control_slave_status_underflow_signal;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_status_overflow_q <= 0;
+      else 
+        wrclk_control_slave_status_overflow_q <= wrclk_control_slave_status_overflow_signal;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_status_almostempty_q <= 0;
+      else 
+        wrclk_control_slave_status_almostempty_q <= wrclk_control_slave_status_almostempty_signal;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_status_almostfull_q <= 0;
+      else 
+        wrclk_control_slave_status_almostfull_q <= wrclk_control_slave_status_almostfull_signal;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_status_empty_q <= 0;
+      else 
+        wrclk_control_slave_status_empty_q <= wrclk_control_slave_status_empty_signal;
+    end
+
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_status_full_q <= 0;
+      else 
+        wrclk_control_slave_status_full_q <= wrclk_control_slave_status_full_signal;
+    end
+
+
+  assign wrclk_control_slave_status_register = {wrclk_control_slave_status_underflow_q,
+    wrclk_control_slave_status_overflow_q,
+    wrclk_control_slave_status_almostempty_q,
+    wrclk_control_slave_status_almostfull_q,
+    wrclk_control_slave_status_empty_q,
+    wrclk_control_slave_status_full_q};
+
+  assign wrclk_control_slave_read_mux = ({32 {(wrclk_control_slave_address == 0)}} & wrclk_control_slave_level_register) |
+    ({32 {(wrclk_control_slave_address == 1)}} & wrclk_control_slave_status_register) |
+    ({32 {(wrclk_control_slave_address == 2)}} & wrclk_control_slave_event_register) |
+    ({32 {(wrclk_control_slave_address == 3)}} & wrclk_control_slave_ienable_register) |
+    ({32 {(wrclk_control_slave_address == 4)}} & wrclk_control_slave_almostfull_threshold_register) |
+    ({32 {(wrclk_control_slave_address == 5)}} & wrclk_control_slave_almostempty_threshold_register) |
+    ({32 {(~((wrclk_control_slave_address == 0))) && (~((wrclk_control_slave_address == 1))) && (~((wrclk_control_slave_address == 2))) && (~((wrclk_control_slave_address == 3))) && (~((wrclk_control_slave_address == 4))) && (~((wrclk_control_slave_address == 5)))}} & wrclk_control_slave_level_register);
+
+  always @(posedge clock or negedge reset_n)
+    begin
+      if (reset_n == 0)
+          wrclk_control_slave_readdata <= 0;
+      else if (wrclk_control_slave_read)
+          wrclk_control_slave_readdata <= wrclk_control_slave_read_mux;
+    end
+
 
 
 endmodule
@@ -340,6 +660,10 @@ module soc_system_fifo_h2f_in (
                                  avalonmm_write_slave_write,
                                  avalonmm_write_slave_writedata,
                                  reset_n,
+                                 wrclk_control_slave_address,
+                                 wrclk_control_slave_read,
+                                 wrclk_control_slave_write,
+                                 wrclk_control_slave_writedata,
                                  wrclock,
 
                                 // outputs:
@@ -347,7 +671,8 @@ module soc_system_fifo_h2f_in (
                                  avalonst_source_empty,
                                  avalonst_source_endofpacket,
                                  avalonst_source_startofpacket,
-                                 avalonst_source_valid
+                                 avalonst_source_valid,
+                                 wrclk_control_slave_readdata
                               )
 ;
 
@@ -356,10 +681,15 @@ module soc_system_fifo_h2f_in (
   output           avalonst_source_endofpacket;
   output           avalonst_source_startofpacket;
   output           avalonst_source_valid;
+  output  [ 31: 0] wrclk_control_slave_readdata;
   input            avalonmm_write_slave_address;
   input            avalonmm_write_slave_write;
   input   [ 31: 0] avalonmm_write_slave_writedata;
   input            reset_n;
+  input   [  2: 0] wrclk_control_slave_address;
+  input            wrclk_control_slave_read;
+  input            wrclk_control_slave_write;
+  input   [ 31: 0] wrclk_control_slave_writedata;
   input            wrclock;
 
 
@@ -379,19 +709,25 @@ wire    [ 31: 0] q;
 wire    [  3: 0] q_i;
 wire             rdreq;
 wire             rdreq_i;
+wire    [ 31: 0] wrclk_control_slave_readdata;
 wire             wrreq;
 wire             wrreq_driver;
   //the_scfifo_with_controls, which is an e_instance
   soc_system_fifo_h2f_in_scfifo_with_controls the_scfifo_with_controls
     (
-      .clock   (clock),
-      .data    (data),
-      .empty   (empty),
-      .full    (full),
-      .q       (q),
-      .rdreq   (rdreq),
-      .reset_n (reset_n),
-      .wrreq   (wrreq)
+      .clock                         (clock),
+      .data                          (data),
+      .empty                         (empty),
+      .full                          (full),
+      .q                             (q),
+      .rdreq                         (rdreq),
+      .reset_n                       (reset_n),
+      .wrclk_control_slave_address   (wrclk_control_slave_address),
+      .wrclk_control_slave_read      (wrclk_control_slave_read),
+      .wrclk_control_slave_readdata  (wrclk_control_slave_readdata),
+      .wrclk_control_slave_write     (wrclk_control_slave_write),
+      .wrclk_control_slave_writedata (wrclk_control_slave_writedata),
+      .wrreq                         (wrreq)
     );
 
   //in, which is an e_avalon_slave
@@ -451,6 +787,7 @@ wire             wrreq_driver;
 
 
   //out, which is an e_atlantic_master
+  //in_csr, which is an e_avalon_slave
 
 endmodule
 

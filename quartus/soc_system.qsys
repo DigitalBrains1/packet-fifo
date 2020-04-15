@@ -119,7 +119,7 @@
    {
       datum baseAddress
       {
-         value = "8192";
+         value = "4096";
          type = "String";
       }
    }
@@ -127,7 +127,7 @@
    {
       datum baseAddress
       {
-         value = "8224";
+         value = "4128";
          type = "String";
       }
    }
@@ -143,7 +143,7 @@
    {
       datum baseAddress
       {
-         value = "4096";
+         value = "32";
          type = "String";
       }
    }
@@ -498,7 +498,7 @@
   <parameter name="usePacket" value="true" />
   <parameter name="useReadControl" value="false" />
   <parameter name="useRegister" value="false" />
-  <parameter name="useWriteControl" value="false" />
+  <parameter name="useWriteControl" value="true" />
  </module>
  <module
    name="fifo_h2f_out"
@@ -1159,7 +1159,7 @@
   <parameter name="PIPELINE_COMMAND" value="1" />
   <parameter name="PIPELINE_RESPONSE" value="1" />
   <parameter name="SYMBOL_WIDTH" value="8" />
-  <parameter name="SYSINFO_ADDR_WIDTH" value="14" />
+  <parameter name="SYSINFO_ADDR_WIDTH" value="13" />
   <parameter name="USE_AUTO_ADDRESS_WIDTH" value="1" />
   <parameter name="USE_RESPONSE" value="0" />
  </module>
@@ -1248,7 +1248,7 @@
    start="mm_bridge_1.m0"
    end="fifo_h2f_in.in">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x1000" />
+  <parameter name="baseAddress" value="0x0020" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1257,7 +1257,16 @@
    start="mm_bridge_1.m0"
    end="fifo_f2h_out.in_csr">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x2000" />
+  <parameter name="baseAddress" value="0x1000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="mm_bridge_1.m0"
+   end="fifo_h2f_in.in_csr">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1266,7 +1275,7 @@
    start="mm_bridge_1.m0"
    end="fifo_f2h_out.out">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x2020" />
+  <parameter name="baseAddress" value="0x1020" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
