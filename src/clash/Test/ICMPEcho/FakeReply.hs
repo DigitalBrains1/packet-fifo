@@ -24,10 +24,11 @@
  - ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  - POSSIBILITY OF SUCH DAMAGE.
  -}
+{-# LANGUAGE MonomorphismRestriction #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Test.ICMPEcho.ScanEcho where
+module Test.ICMPEcho.FakeReply where
 
 import Clash.Prelude
 import qualified Clash.Explicit.Prelude as CEP

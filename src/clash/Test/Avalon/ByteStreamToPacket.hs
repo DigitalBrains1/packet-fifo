@@ -39,6 +39,10 @@ mockTopEntity
 mockTopEntity = withClockResetEnable clockGen resetGen enableGen
                                      mockTopEntity'
 
+mockTopEntity'
+    :: HiddenClockResetEnable System
+    => Signal System (Bool, Unsigned 32, Unsigned 32)
+
 mockTopEntity' = bundle packet
     where
         packet = (packetValid, packetData, packetOther)

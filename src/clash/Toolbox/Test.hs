@@ -128,6 +128,7 @@ traceSignalT2 (n1, n2) inp = bundle (s1', s2')
  -}
 seqXA :: Applicative f => f a -> f b -> f b
 seqXA = liftA2 seqX
+infixr 0 `seqXA`
 
 {----------------------------------------------------------------------------
  - Dataflow-like simulation helpers
