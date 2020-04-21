@@ -193,15 +193,15 @@ close_rdfifo(struct rdfifo_ctx *ctx)
 }
 
 int
-init_wrfifo(struct fifo_mapped_reg **in, const struct uio_info_t *info)
+init_wrfifo(struct wrfifo_ctx **ctx, const struct uio_info_t *info)
 {
 	int fd;
 	char uio_dev_n[16];
 	int ret;
 	size_t i;
 
-	*in = malloc(sizeof(**in));
-	if (!*in) {
+	*ctx = malloc(sizeof(**ctx));
+	if (!*ctx) {
 		ret = FIFO_GENERAL_ERROR;
 		goto init_wr_out_err;
 	}
@@ -231,29 +231,51 @@ init_wrfifo(struct fifo_mapped_reg **in, const struct uio_info_t *info)
 		 */
 		i = 0;
 	}
-	(*in)->map_base = mmap(NULL, info->maps[i].size,
+	(*ctx)->in.map_base = mmap(NULL, info->maps[i].size,
 			(PROT_READ | PROT_WRITE), MAP_SHARED, fd,
 			i * getpagesize());
-	if ((*in)->map_base == MAP_FAILED)
+	if ((*ctx)->in.map_base == MAP_FAILED)
 		goto init_wr_out_close;
-	(*in)->size = info->maps[i].size;
-	(*in)->reg_base = addr_offset((*in)->map_base, info->maps[i].offset);
+	(*ctx)->in.size = info->maps[i].size;
+	(*ctx)->in.reg_base = addr_offset((*ctx)->in.map_base,
+			info->maps[i].offset);
+
+	for (i = 0; i < MAX_UIO_MAPS; i++)
+		if (!strcmp(info->maps[i].name, "in_csr"))
+			break;
+	if (i != MAX_UIO_MAPS) {
+		(*ctx)->csr.map_base = mmap(NULL, info->maps[i].size,
+				(PROT_READ | PROT_WRITE), MAP_SHARED, fd,
+				i * getpagesize());
+		if ((*ctx)->csr.map_base == MAP_FAILED)
+			goto init_wr_out_mmap1;
+		(*ctx)->csr.size = info->maps[i].size;
+		(*ctx)->csr.reg_base = addr_offset((*ctx)->csr.map_base,
+				info->maps[i].offset);
+	} else {
+		(*ctx)->csr.reg_base = NULL;
+	}
+
 	close(fd);
 
 	return 0;
+init_wr_out_mmap1:
+	munmap((*ctx)->in.map_base, (*ctx)->in.size);
 init_wr_out_close:
 	close(fd);
 init_wr_out_free_ctx:
-	free(*in);
+	free(*ctx);
 init_wr_out_err:
 	return ret;
 }
 
 void
-close_wrfifo(struct fifo_mapped_reg *in)
+close_wrfifo(struct wrfifo_ctx *ctx)
 {
-	munmap(in->map_base, in->size);
-	free(in);
+	munmap(ctx->in.map_base, ctx->in.size);
+	if (ctx->csr.reg_base)
+		munmap(ctx->csr.map_base, ctx->csr.size);
+	free(ctx);
 }
 
 /*
@@ -334,7 +356,7 @@ fifo_read(struct rdfifo_ctx *ctx)
 }
 
 void
-fifo_write(const struct fifo_mapped_reg *in, const void *buf, size_t len)
+fifo_write(const struct wrfifo_ctx *ctx, const void *buf, size_t len)
 {
 	const uint8_t *buf8 = (const uint8_t *) buf;
 	uint32_t word;
@@ -346,20 +368,20 @@ fifo_write(const struct fifo_mapped_reg *in, const void *buf, size_t len)
 	num_tail = len - (num_words << 2);
 	i = 0;
 	if (num_words != 0) {
-		mmio_write32(in->reg_base, FIFO_OTHER_INFO_REG,
+		mmio_write32(ctx->in.reg_base, FIFO_OTHER_INFO_REG,
 				FIFO_INFO_SOP);
 		for (i = 0; i < num_words * 4; i += 4) {
 			memcpy(&word, &buf8[i], 4);
-			mmio_write32(in->reg_base, FIFO_DATA_REG,
+			mmio_write32(ctx->in.reg_base, FIFO_DATA_REG,
 					ntohl(word));
 		}
 	}
 
-	mmio_write32(in->reg_base, FIFO_OTHER_INFO_REG,
+	mmio_write32(ctx->in.reg_base, FIFO_OTHER_INFO_REG,
 			(num_words == 0 ? FIFO_INFO_SOP : 0)
 			| FIFO_INFO_EOP
 			| FIFO_INFO_EMPTY_SET(4 - num_tail));
 	word = 0;
 	memcpy(&word, &buf8[i], num_tail);
-	mmio_write32(in->reg_base, FIFO_DATA_REG, ntohl(word));
+	mmio_write32(ctx->in.reg_base, FIFO_DATA_REG, ntohl(word));
 }

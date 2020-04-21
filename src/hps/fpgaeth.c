@@ -90,7 +90,7 @@ handle_f2h_packet(struct rdfifo_ctx *f2h_ctx, const int tunfd)
 }
 
 static int
-handle_tun_packet(const int tunfd, struct fifo_mapped_reg *h2f_ctx)
+handle_tun_packet(const int tunfd, struct wrfifo_ctx *h2f_ctx)
 {
 	uint8_t buf[2048];
 	ssize_t len;
@@ -109,7 +109,7 @@ main(int argc, char *argv[])
 {
 	char dev[IFNAMSIZ];
 	struct rdfifo_ctx *f2h_ctx;
-	struct fifo_mapped_reg *h2f_ctx;
+	struct wrfifo_ctx *h2f_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
 	int res, read_f2h, read_tun;
 	fd_set fds;

@@ -164,7 +164,7 @@ leave_clean(const struct rdfifo_ctx *f2h_ctx)
  */
 int
 tc_evint_level(struct rdfifo_ctx *f2h_ctx,
-		const struct fifo_mapped_reg *h2f_ctx)
+		const struct wrfifo_ctx *h2f_ctx)
 {
 	int fail = 0;
 	const void *f2h_csr_base = f2h_ctx->csr.reg_base;
@@ -208,7 +208,7 @@ tc_evint_level(struct rdfifo_ctx *f2h_ctx,
  */
 int
 tc_race_int_en(struct rdfifo_ctx *f2h_ctx,
-		const struct fifo_mapped_reg *h2f_ctx)
+		const struct wrfifo_ctx *h2f_ctx)
 {
 	int fail = 0;
 	const void *f2h_csr_base = f2h_ctx->csr.reg_base;
@@ -252,7 +252,7 @@ tc_race_int_en(struct rdfifo_ctx *f2h_ctx,
  */
 int
 tc_evflag_edge(struct rdfifo_ctx *f2h_ctx,
-		const struct fifo_mapped_reg *h2f_ctx)
+		const struct wrfifo_ctx *h2f_ctx)
 {
 	int fail = 0;
 	const void *f2h_csr_base = f2h_ctx->csr.reg_base;

@@ -46,7 +46,7 @@ main()
 	int res;
 	void *f2h_base, *f2h_csr_base, *h2f_base;
 	struct rdfifo_ctx *f2h_ctx;
-	struct fifo_mapped_reg *h2f_ctx;
+	struct wrfifo_ctx *h2f_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
 	uint32_t tmp;
 	uint8_t outbuf[2048];
@@ -84,7 +84,7 @@ main()
 
 	f2h_csr_base = f2h_ctx->csr.reg_base;
 	f2h_base = f2h_ctx->out.reg_base;
-	h2f_base = h2f_ctx->reg_base;
+	h2f_base = h2f_ctx->in.reg_base;
 
 	tc_evint_level(f2h_ctx, h2f_ctx);
 	tc_race_int_en(f2h_ctx, h2f_ctx);

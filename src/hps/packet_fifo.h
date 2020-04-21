@@ -48,6 +48,15 @@ rdfifo_ctx {
 	uint32_t buf[]; /* Incoming packet buffer */
 };
 
+/*
+ * Context for FIFO write operation.
+ */
+struct
+wrfifo_ctx {
+	struct fifo_mapped_reg in; /* "in" register */
+	struct fifo_mapped_reg csr; /* "in_csr" register (optional) */
+};
+
 #define FIFO_GENERAL_ERROR  (-1) /* Catch-all error */
 #define FIFO_NEED_MORE      (-2) /* Packet not complete yet */
 #define FIFO_OVERLONG_ERROR (-3) /* Packet is larger than buffer */
@@ -95,23 +104,20 @@ close_rdfifo(struct rdfifo_ctx *ctx);
  *
  * A context is allocated by this function and freed by close_rdfifo().
  *
- * Since currently the only needed context is a `fifo_mapped_reg` structure
- * for the "in" MMIO register, that structure is directly used as a context.
- *
- * @param in[out] Passes back to the caller a pointer to the allocated
- *                context.
- * @param info The uio device for this read-side FIFO.
+ * @param ctx[out] Passes back to the caller a pointer to the allocated
+ *                 context.
+ * @param info The uio device for this write-side FIFO.
  *
  * @returns 0 on success or one of the defined error codes.
  */
 extern int
-init_wrfifo(struct fifo_mapped_reg **in, const struct uio_info_t *info);
+init_wrfifo(struct wrfifo_ctx **ctx, const struct uio_info_t *info);
 
 /*
- * Close a read-side FIFO and release all resources.
+ * Close a write-side FIFO and release all resources.
  */
 extern void
-close_wrfifo(struct fifo_mapped_reg *in);
+close_wrfifo(struct wrfifo_ctx *ctx);
 
 /*
  * Read from a FIFO.
@@ -153,11 +159,11 @@ fifo_read(struct rdfifo_ctx *ctx);
  * TODO: Implement backpressure. The current implementation will happily
  * overflow and corrupt data.
  *
- * @param in The write context for the FIFO.
+ * @param ctx The write context for the FIFO.
  * @param buf The data to be written.
  * @param len The number of bytes to write.
  */
 extern void
-fifo_write(const struct fifo_mapped_reg *in, const void *buf, size_t len);
+fifo_write(const struct wrfifo_ctx *ctx, const void *buf, size_t len);
 
 #endif /* ndef FILE_PACKET_FIFO_H */
