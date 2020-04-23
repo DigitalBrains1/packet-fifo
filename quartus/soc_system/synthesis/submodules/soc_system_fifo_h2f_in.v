@@ -172,6 +172,7 @@ wire    [  5: 0] wrclk_control_slave_status_register;
 reg              wrclk_control_slave_status_underflow_q;
 wire             wrclk_control_slave_status_underflow_signal;
 wire    [  3: 0] wrclk_control_slave_threshold_writedata;
+wire             wrreq_valid;
   //the_scfifo, which is an e_instance
   soc_system_fifo_h2f_in_single_clock_fifo the_scfifo
     (
@@ -183,12 +184,13 @@ wire    [  3: 0] wrclk_control_slave_threshold_writedata;
       .q     (q),
       .rdreq (rdreq),
       .usedw (usedw),
-      .wrreq (wrreq)
+      .wrreq (wrreq_valid)
     );
 
   assign level = {full,
     usedw};
 
+  assign wrreq_valid = wrreq & ~full;
   assign overflow = wrreq & full;
   assign underflow = rdreq & empty;
   assign wrclk_control_slave_threshold_writedata = (wrclk_control_slave_writedata < 1) ? 1 :
@@ -659,6 +661,7 @@ module soc_system_fifo_h2f_in (
                                  avalonmm_write_slave_address,
                                  avalonmm_write_slave_write,
                                  avalonmm_write_slave_writedata,
+                                 avalonst_source_ready,
                                  reset_n,
                                  wrclk_control_slave_address,
                                  wrclk_control_slave_read,
@@ -667,6 +670,7 @@ module soc_system_fifo_h2f_in (
                                  wrclock,
 
                                 // outputs:
+                                 avalonmm_write_slave_waitrequest,
                                  avalonst_source_data,
                                  avalonst_source_empty,
                                  avalonst_source_endofpacket,
@@ -676,6 +680,7 @@ module soc_system_fifo_h2f_in (
                               )
 ;
 
+  output           avalonmm_write_slave_waitrequest;
   output  [ 31: 0] avalonst_source_data;
   output  [  1: 0] avalonst_source_empty;
   output           avalonst_source_endofpacket;
@@ -685,6 +690,7 @@ module soc_system_fifo_h2f_in (
   input            avalonmm_write_slave_address;
   input            avalonmm_write_slave_write;
   input   [ 31: 0] avalonmm_write_slave_writedata;
+  input            avalonst_source_ready;
   input            reset_n;
   input   [  2: 0] wrclk_control_slave_address;
   input            wrclk_control_slave_read;
@@ -694,6 +700,7 @@ module soc_system_fifo_h2f_in (
 
 
 wire    [ 31: 0] avalonmm_map_data_in;
+wire             avalonmm_write_slave_waitrequest;
 wire    [ 31: 0] avalonst_map_data_out;
 wire    [  3: 0] avalonst_other_info;
 wire    [ 31: 0] avalonst_source_data;
@@ -731,6 +738,7 @@ wire             wrreq_driver;
     );
 
   //in, which is an e_avalon_slave
+  assign avalonmm_write_slave_waitrequest = (reset_n == 0) ? 1'b1 : full;
   //the_map_avalonmm_to_avalonst, which is an e_instance
   soc_system_fifo_h2f_in_map_avalonmm_to_avalonst the_map_avalonmm_to_avalonst
     (
@@ -775,14 +783,14 @@ wire             wrreq_driver;
     );
 
   assign avalonst_source_data = q;
-  assign rdreq = !empty;
+  assign rdreq = !empty & avalonst_source_ready;
   assign rdreq_i = rdreq;
   always @(posedge clock or negedge reset_n)
     begin
       if (reset_n == 0)
           avalonst_source_valid <= 0;
       else 
-        avalonst_source_valid <= !empty;
+        avalonst_source_valid <= !empty & avalonst_source_ready;
     end
 
 

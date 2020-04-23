@@ -31,6 +31,7 @@ module soc_system_mm_interconnect_5 (
 		output wire [0:0]  fifo_h2f_in_in_address,                        //                          fifo_h2f_in_in.address
 		output wire        fifo_h2f_in_in_write,                          //                                        .write
 		output wire [31:0] fifo_h2f_in_in_writedata,                      //                                        .writedata
+		input  wire        fifo_h2f_in_in_waitrequest,                    //                                        .waitrequest
 		output wire [2:0]  fifo_h2f_in_in_csr_address,                    //                      fifo_h2f_in_in_csr.address
 		output wire        fifo_h2f_in_in_csr_write,                      //                                        .write
 		output wire        fifo_h2f_in_in_csr_read,                       //                                        .read
@@ -378,7 +379,7 @@ module soc_system_mm_interconnect_5 (
 		.UAV_BURSTCOUNT_W               (3),
 		.AV_READLATENCY                 (0),
 		.USE_READDATAVALID              (0),
-		.USE_WAITREQUEST                (0),
+		.USE_WAITREQUEST                (1),
 		.USE_UAV_CLKEN                  (0),
 		.USE_READRESPONSE               (0),
 		.USE_WRITERESPONSE              (0),
@@ -410,6 +411,7 @@ module soc_system_mm_interconnect_5 (
 		.av_address             (fifo_h2f_in_in_address),                        //      avalon_anti_slave_0.address
 		.av_write               (fifo_h2f_in_in_write),                          //                         .write
 		.av_writedata           (fifo_h2f_in_in_writedata),                      //                         .writedata
+		.av_waitrequest         (fifo_h2f_in_in_waitrequest),                    //                         .waitrequest
 		.av_read                (),                                              //              (terminated)
 		.av_readdata            (32'b11011110101011011101111010101101),          //              (terminated)
 		.av_begintransfer       (),                                              //              (terminated)
@@ -417,7 +419,6 @@ module soc_system_mm_interconnect_5 (
 		.av_burstcount          (),                                              //              (terminated)
 		.av_byteenable          (),                                              //              (terminated)
 		.av_readdatavalid       (1'b0),                                          //              (terminated)
-		.av_waitrequest         (1'b0),                                          //              (terminated)
 		.av_writebyteenable     (),                                              //              (terminated)
 		.av_lock                (),                                              //              (terminated)
 		.av_chipselect          (),                                              //              (terminated)

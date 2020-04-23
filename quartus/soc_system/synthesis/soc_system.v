@@ -110,6 +110,7 @@ module soc_system (
 
 	wire          fifo_h2f_in_out_valid;                                     // fifo_h2f_in:avalonst_source_valid -> fifo_h2f_out:avalonst_sink_valid
 	wire   [31:0] fifo_h2f_in_out_data;                                      // fifo_h2f_in:avalonst_source_data -> fifo_h2f_out:avalonst_sink_data
+	wire          fifo_h2f_in_out_ready;                                     // fifo_h2f_out:avalonst_sink_ready -> fifo_h2f_in:avalonst_source_ready
 	wire          fifo_h2f_in_out_startofpacket;                             // fifo_h2f_in:avalonst_source_startofpacket -> fifo_h2f_out:avalonst_sink_startofpacket
 	wire          fifo_h2f_in_out_endofpacket;                               // fifo_h2f_in:avalonst_source_endofpacket -> fifo_h2f_out:avalonst_sink_endofpacket
 	wire    [1:0] fifo_h2f_in_out_empty;                                     // fifo_h2f_in:avalonst_source_empty -> fifo_h2f_out:avalonst_sink_empty
@@ -143,6 +144,7 @@ module soc_system (
 	wire          mm_interconnect_1_fifo_h2f_out_in_csr_write;               // mm_interconnect_1:fifo_h2f_out_in_csr_write -> fifo_h2f_out:wrclk_control_slave_write
 	wire   [31:0] mm_interconnect_1_fifo_h2f_out_in_csr_writedata;           // mm_interconnect_1:fifo_h2f_out_in_csr_writedata -> fifo_h2f_out:wrclk_control_slave_writedata
 	wire   [31:0] mm_interconnect_1_fifo_h2f_out_out_readdata;               // fifo_h2f_out:avalonmm_read_slave_readdata -> mm_interconnect_1:fifo_h2f_out_out_readdata
+	wire          mm_interconnect_1_fifo_h2f_out_out_waitrequest;            // fifo_h2f_out:avalonmm_read_slave_waitrequest -> mm_interconnect_1:fifo_h2f_out_out_waitrequest
 	wire    [0:0] mm_interconnect_1_fifo_h2f_out_out_address;                // mm_interconnect_1:fifo_h2f_out_out_address -> fifo_h2f_out:avalonmm_read_slave_address
 	wire          mm_interconnect_1_fifo_h2f_out_out_read;                   // mm_interconnect_1:fifo_h2f_out_out_read -> fifo_h2f_out:avalonmm_read_slave_read
 	wire    [1:0] hps_0_h2f_axi_master_awburst;                              // hps_0:h2f_AWBURST -> mm_interconnect_2:hps_0_h2f_axi_master_awburst
@@ -294,6 +296,7 @@ module soc_system (
 	wire   [31:0] mm_bridge_1_m0_writedata;                                  // mm_bridge_1:m0_writedata -> mm_interconnect_5:mm_bridge_1_m0_writedata
 	wire          mm_bridge_1_m0_write;                                      // mm_bridge_1:m0_write -> mm_interconnect_5:mm_bridge_1_m0_write
 	wire    [0:0] mm_bridge_1_m0_burstcount;                                 // mm_bridge_1:m0_burstcount -> mm_interconnect_5:mm_bridge_1_m0_burstcount
+	wire          mm_interconnect_5_fifo_h2f_in_in_waitrequest;              // fifo_h2f_in:avalonmm_write_slave_waitrequest -> mm_interconnect_5:fifo_h2f_in_in_waitrequest
 	wire    [0:0] mm_interconnect_5_fifo_h2f_in_in_address;                  // mm_interconnect_5:fifo_h2f_in_in_address -> fifo_h2f_in:avalonmm_write_slave_address
 	wire          mm_interconnect_5_fifo_h2f_in_in_write;                    // mm_interconnect_5:fifo_h2f_in_in_write -> fifo_h2f_in:avalonmm_write_slave_write
 	wire   [31:0] mm_interconnect_5_fifo_h2f_in_in_writedata;                // mm_interconnect_5:fifo_h2f_in_in_writedata -> fifo_h2f_in:avalonmm_write_slave_writedata
@@ -497,40 +500,44 @@ module soc_system (
 	);
 
 	soc_system_fifo_h2f_in fifo_h2f_in (
-		.wrclock                        (clk_clk),                                        //   clk_in.clk
-		.reset_n                        (~rst_controller_reset_out_reset),                // reset_in.reset_n
-		.avalonmm_write_slave_writedata (mm_interconnect_5_fifo_h2f_in_in_writedata),     //       in.writedata
-		.avalonmm_write_slave_write     (mm_interconnect_5_fifo_h2f_in_in_write),         //         .write
-		.avalonmm_write_slave_address   (mm_interconnect_5_fifo_h2f_in_in_address),       //         .address
-		.avalonst_source_valid          (fifo_h2f_in_out_valid),                          //      out.valid
-		.avalonst_source_data           (fifo_h2f_in_out_data),                           //         .data
-		.avalonst_source_startofpacket  (fifo_h2f_in_out_startofpacket),                  //         .startofpacket
-		.avalonst_source_endofpacket    (fifo_h2f_in_out_endofpacket),                    //         .endofpacket
-		.avalonst_source_empty          (fifo_h2f_in_out_empty),                          //         .empty
-		.wrclk_control_slave_address    (mm_interconnect_5_fifo_h2f_in_in_csr_address),   //   in_csr.address
-		.wrclk_control_slave_read       (mm_interconnect_5_fifo_h2f_in_in_csr_read),      //         .read
-		.wrclk_control_slave_writedata  (mm_interconnect_5_fifo_h2f_in_in_csr_writedata), //         .writedata
-		.wrclk_control_slave_write      (mm_interconnect_5_fifo_h2f_in_in_csr_write),     //         .write
-		.wrclk_control_slave_readdata   (mm_interconnect_5_fifo_h2f_in_in_csr_readdata)   //         .readdata
+		.wrclock                          (clk_clk),                                        //   clk_in.clk
+		.reset_n                          (~rst_controller_reset_out_reset),                // reset_in.reset_n
+		.avalonmm_write_slave_writedata   (mm_interconnect_5_fifo_h2f_in_in_writedata),     //       in.writedata
+		.avalonmm_write_slave_write       (mm_interconnect_5_fifo_h2f_in_in_write),         //         .write
+		.avalonmm_write_slave_address     (mm_interconnect_5_fifo_h2f_in_in_address),       //         .address
+		.avalonmm_write_slave_waitrequest (mm_interconnect_5_fifo_h2f_in_in_waitrequest),   //         .waitrequest
+		.avalonst_source_valid            (fifo_h2f_in_out_valid),                          //      out.valid
+		.avalonst_source_data             (fifo_h2f_in_out_data),                           //         .data
+		.avalonst_source_startofpacket    (fifo_h2f_in_out_startofpacket),                  //         .startofpacket
+		.avalonst_source_endofpacket      (fifo_h2f_in_out_endofpacket),                    //         .endofpacket
+		.avalonst_source_empty            (fifo_h2f_in_out_empty),                          //         .empty
+		.avalonst_source_ready            (fifo_h2f_in_out_ready),                          //         .ready
+		.wrclk_control_slave_address      (mm_interconnect_5_fifo_h2f_in_in_csr_address),   //   in_csr.address
+		.wrclk_control_slave_read         (mm_interconnect_5_fifo_h2f_in_in_csr_read),      //         .read
+		.wrclk_control_slave_writedata    (mm_interconnect_5_fifo_h2f_in_in_csr_writedata), //         .writedata
+		.wrclk_control_slave_write        (mm_interconnect_5_fifo_h2f_in_in_csr_write),     //         .write
+		.wrclk_control_slave_readdata     (mm_interconnect_5_fifo_h2f_in_in_csr_readdata)   //         .readdata
 	);
 
-	soc_system_fifo_h2f_out fifo_h2f_out (
-		.wrclock                       (clk_clk),                                         //   clk_in.clk
-		.reset_n                       (~rst_controller_reset_out_reset),                 // reset_in.reset_n
-		.avalonst_sink_valid           (fifo_h2f_in_out_valid),                           //       in.valid
-		.avalonst_sink_data            (fifo_h2f_in_out_data),                            //         .data
-		.avalonst_sink_startofpacket   (fifo_h2f_in_out_startofpacket),                   //         .startofpacket
-		.avalonst_sink_endofpacket     (fifo_h2f_in_out_endofpacket),                     //         .endofpacket
-		.avalonst_sink_empty           (fifo_h2f_in_out_empty),                           //         .empty
-		.avalonmm_read_slave_readdata  (mm_interconnect_1_fifo_h2f_out_out_readdata),     //      out.readdata
-		.avalonmm_read_slave_read      (mm_interconnect_1_fifo_h2f_out_out_read),         //         .read
-		.avalonmm_read_slave_address   (mm_interconnect_1_fifo_h2f_out_out_address),      //         .address
-		.wrclk_control_slave_address   (mm_interconnect_1_fifo_h2f_out_in_csr_address),   //   in_csr.address
-		.wrclk_control_slave_read      (mm_interconnect_1_fifo_h2f_out_in_csr_read),      //         .read
-		.wrclk_control_slave_writedata (mm_interconnect_1_fifo_h2f_out_in_csr_writedata), //         .writedata
-		.wrclk_control_slave_write     (mm_interconnect_1_fifo_h2f_out_in_csr_write),     //         .write
-		.wrclk_control_slave_readdata  (mm_interconnect_1_fifo_h2f_out_in_csr_readdata),  //         .readdata
-		.wrclk_control_slave_irq       ()                                                 //   in_irq.irq
+	soc_system_fifo_f2h_out fifo_h2f_out (
+		.wrclock                         (clk_clk),                                         //   clk_in.clk
+		.reset_n                         (~rst_controller_reset_out_reset),                 // reset_in.reset_n
+		.avalonst_sink_valid             (fifo_h2f_in_out_valid),                           //       in.valid
+		.avalonst_sink_data              (fifo_h2f_in_out_data),                            //         .data
+		.avalonst_sink_startofpacket     (fifo_h2f_in_out_startofpacket),                   //         .startofpacket
+		.avalonst_sink_endofpacket       (fifo_h2f_in_out_endofpacket),                     //         .endofpacket
+		.avalonst_sink_empty             (fifo_h2f_in_out_empty),                           //         .empty
+		.avalonst_sink_ready             (fifo_h2f_in_out_ready),                           //         .ready
+		.avalonmm_read_slave_readdata    (mm_interconnect_1_fifo_h2f_out_out_readdata),     //      out.readdata
+		.avalonmm_read_slave_read        (mm_interconnect_1_fifo_h2f_out_out_read),         //         .read
+		.avalonmm_read_slave_address     (mm_interconnect_1_fifo_h2f_out_out_address),      //         .address
+		.avalonmm_read_slave_waitrequest (mm_interconnect_1_fifo_h2f_out_out_waitrequest),  //         .waitrequest
+		.wrclk_control_slave_address     (mm_interconnect_1_fifo_h2f_out_in_csr_address),   //   in_csr.address
+		.wrclk_control_slave_read        (mm_interconnect_1_fifo_h2f_out_in_csr_read),      //         .read
+		.wrclk_control_slave_writedata   (mm_interconnect_1_fifo_h2f_out_in_csr_writedata), //         .writedata
+		.wrclk_control_slave_write       (mm_interconnect_1_fifo_h2f_out_in_csr_write),     //         .write
+		.wrclk_control_slave_readdata    (mm_interconnect_1_fifo_h2f_out_in_csr_readdata),  //         .readdata
+		.wrclk_control_slave_irq         ()                                                 //   in_irq.irq
 	);
 
 	soc_system_fifo_h2f_out_mm fifo_h2f_out_mm (
@@ -934,7 +941,8 @@ module soc_system (
 		.fifo_h2f_out_in_csr_writedata                     (mm_interconnect_1_fifo_h2f_out_in_csr_writedata), //                                            .writedata
 		.fifo_h2f_out_out_address                          (mm_interconnect_1_fifo_h2f_out_out_address),      //                            fifo_h2f_out_out.address
 		.fifo_h2f_out_out_read                             (mm_interconnect_1_fifo_h2f_out_out_read),         //                                            .read
-		.fifo_h2f_out_out_readdata                         (mm_interconnect_1_fifo_h2f_out_out_readdata)      //                                            .readdata
+		.fifo_h2f_out_out_readdata                         (mm_interconnect_1_fifo_h2f_out_out_readdata),     //                                            .readdata
+		.fifo_h2f_out_out_waitrequest                      (mm_interconnect_1_fifo_h2f_out_out_waitrequest)   //                                            .waitrequest
 	);
 
 	soc_system_mm_interconnect_2 mm_interconnect_2 (
@@ -1119,6 +1127,7 @@ module soc_system (
 		.fifo_h2f_in_in_address                        (mm_interconnect_5_fifo_h2f_in_in_address),        //                          fifo_h2f_in_in.address
 		.fifo_h2f_in_in_write                          (mm_interconnect_5_fifo_h2f_in_in_write),          //                                        .write
 		.fifo_h2f_in_in_writedata                      (mm_interconnect_5_fifo_h2f_in_in_writedata),      //                                        .writedata
+		.fifo_h2f_in_in_waitrequest                    (mm_interconnect_5_fifo_h2f_in_in_waitrequest),    //                                        .waitrequest
 		.fifo_h2f_in_in_csr_address                    (mm_interconnect_5_fifo_h2f_in_in_csr_address),    //                      fifo_h2f_in_in_csr.address
 		.fifo_h2f_in_in_csr_write                      (mm_interconnect_5_fifo_h2f_in_in_csr_write),      //                                        .write
 		.fifo_h2f_in_in_csr_read                       (mm_interconnect_5_fifo_h2f_in_in_csr_read),       //                                        .read

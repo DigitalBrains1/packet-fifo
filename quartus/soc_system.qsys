@@ -493,7 +493,7 @@
   <parameter name="singleClockMode" value="true" />
   <parameter name="singleResetMode" value="false" />
   <parameter name="symbolsPerBeat" value="4" />
-  <parameter name="useBackpressure" value="false" />
+  <parameter name="useBackpressure" value="true" />
   <parameter name="useIRQ" value="false" />
   <parameter name="usePacket" value="true" />
   <parameter name="useReadControl" value="false" />
@@ -518,7 +518,7 @@
   <parameter name="singleClockMode" value="true" />
   <parameter name="singleResetMode" value="false" />
   <parameter name="symbolsPerBeat" value="4" />
-  <parameter name="useBackpressure" value="false" />
+  <parameter name="useBackpressure" value="true" />
   <parameter name="useIRQ" value="true" />
   <parameter name="usePacket" value="true" />
   <parameter name="useReadControl" value="false" />

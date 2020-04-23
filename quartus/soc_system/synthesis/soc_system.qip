@@ -2,7 +2,7 @@ set_global_assignment -entity "soc_system" -library "soc_system" -name IP_TOOL_N
 set_global_assignment -entity "soc_system" -library "soc_system" -name IP_TOOL_VERSION "18.1"
 set_global_assignment -entity "soc_system" -library "soc_system" -name IP_TOOL_ENV "Qsys"
 set_global_assignment -library "soc_system" -name SOPCINFO_FILE [file join $::quartus(qip_path) "../../soc_system.sopcinfo"]
-set_global_assignment -entity "soc_system" -library "soc_system" -name SLD_INFO "QSYS_NAME soc_system HAS_SOPCINFO 1 GENERATION_ID 1587649960"
+set_global_assignment -entity "soc_system" -library "soc_system" -name SLD_INFO "QSYS_NAME soc_system HAS_SOPCINFO 1 GENERATION_ID 1587653322"
 set_global_assignment -library "soc_system" -name MISC_FILE [file join $::quartus(qip_path) "../soc_system.cmp"]
 set_global_assignment -library "soc_system" -name SLD_FILE [file join $::quartus(qip_path) "soc_system.regmap"]
 set_global_assignment -library "soc_system" -name MISC_FILE [file join $::quartus(qip_path) "soc_system_hps_0_hps.svd"]
@@ -17,7 +17,7 @@ set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPON
 set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPONENT_REPORT_HIERARCHY "On"
 set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPONENT_INTERNAL "Off"
 set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPONENT_VERSION "MS4w"
-set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPONENT_PARAMETER "QVVUT19HRU5FUkFUSU9OX0lE::MTU4NzY0OTk2MA==::QXV0byBHRU5FUkFUSU9OX0lE"
+set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPONENT_PARAMETER "QVVUT19HRU5FUkFUSU9OX0lE::MTU4NzY1MzMyMg==::QXV0byBHRU5FUkFUSU9OX0lE"
 set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfRkFNSUxZ::Q3ljbG9uZSBW::QXV0byBERVZJQ0VfRkFNSUxZ"
 set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0U=::NUNTWEZDNkQ2RjMxQzY=::QXV0byBERVZJQ0U="
 set_global_assignment -entity "soc_system" -library "soc_system" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfU1BFRURHUkFERQ==::Nl9INg==::QXV0byBERVZJQ0VfU1BFRURHUkFERQ=="
@@ -7475,35 +7475,6 @@ set_global_assignment -entity "soc_system_fifo_h2f_out_mm" -library "soc_system"
 set_global_assignment -entity "soc_system_fifo_h2f_out_mm" -library "soc_system" -name IP_COMPONENT_PARAMETER "ZGF0YV9zaXpl::MzI=::RGF0YSBXaWR0aA=="
 set_global_assignment -entity "soc_system_fifo_h2f_out_mm" -library "soc_system" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfRkFNSUxZ::Q3ljbG9uZSBW::QXV0byBERVZJQ0VfRkFNSUxZ"
 set_global_assignment -entity "soc_system_fifo_h2f_out_mm" -library "soc_system" -name IP_COMPONENT_PARAMETER "QVVUT19DTEtfQ0xPQ0tfUkFURQ==::NTAwMDAwMDA=::QXV0byBDTE9DS19SQVRF"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_NAME "c29jX3N5c3RlbV9maWZvX2gyZl9vdXQ="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_DISPLAY_NAME "QXZhbG9uIEZJRk8gTWVtb3J5IEludGVsIEZQR0EgSVA="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_REPORT_HIERARCHY "Off"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_INTERNAL "Off"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_AUTHOR "SW50ZWwgQ29ycG9yYXRpb24="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_VERSION "MTguMQ=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "YXZhbG9uTU1BdmFsb25TVERhdGFXaWR0aA==::MzI=::YXZhbG9uTU1BdmFsb25TVERhdGFXaWR0aA=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "Yml0c1BlclN5bWJvbA==::OA==::Qml0cyBwZXIgc3ltYm9s"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "Y2hhbm5lbFdpZHRo::MA==::Q2hhbm5lbCB3aWR0aA=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "ZXJyb3JXaWR0aA==::MA==::RXJyb3Igd2lkdGg="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "Zmlmb0RlcHRo::NTEy::RGVwdGg="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "Zmlmb0lucHV0SW50ZXJmYWNlT3B0aW9ucw==::QVZBTE9OU1RfU0lOSw==::SW5wdXQgdHlwZQ=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "Zmlmb091dHB1dEludGVyZmFjZU9wdGlvbnM=::QVZBTE9OTU1fUkVBRA==::T3V0cHV0IHR5cGU="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "c2hvd0hpZGRlbkZlYXR1cmVz::ZmFsc2U=::c2hvd0hpZGRlbkZlYXR1cmVz"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "c2luZ2xlQ2xvY2tNb2Rl::dHJ1ZQ==::Q2xvY2sgc2V0dGluZw=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "c2luZ2xlUmVzZXRNb2Rl::ZmFsc2U=::c2luZ2xlUmVzZXRNb2Rl"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "c3ltYm9sc1BlckJlYXQ=::NA==::U3ltYm9scyBwZXIgYmVhdA=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlQmFja3ByZXNzdXJl::ZmFsc2U=::QWxsb3cgYmFja3ByZXNzdXJl"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlSVJR::dHJ1ZQ==::RW5hYmxlIElSUSBmb3Igc3RhdHVzIHBvcnRz"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlUGFja2V0::dHJ1ZQ==::RW5hYmxlIHBhY2tldCBkYXRh"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlUmVhZENvbnRyb2w=::ZmFsc2U=::Q3JlYXRlIHN0YXR1cyBpbnRlcmZhY2UgZm9yIG91dHB1dA=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlUmVnaXN0ZXI=::ZmFsc2U=::RklGTyBpbXBsZW1lbnRhdGlvbg=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlV3JpdGVDb250cm9s::dHJ1ZQ==::Q3JlYXRlIHN0YXR1cyBpbnRlcmZhY2UgZm9yIGlucHV0"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "ZGV2aWNlRmFtaWx5U3RyaW5n::Q3ljbG9uZSBW::ZGV2aWNlRmFtaWx5U3RyaW5n"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "ZGVyaXZlZF91c2VfYXZhbG9uTU1fd3Jfc2xhdmU=::ZmFsc2U=::ZGVyaXZlZF91c2VfYXZhbG9uTU1fd3Jfc2xhdmU="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "ZGVyaXZlZF91c2VfYXZhbG9uU1Rfc2luaw==::dHJ1ZQ==::ZGVyaXZlZF91c2VfYXZhbG9uU1Rfc2luaw=="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "ZGVyaXZlZF91c2VfYXZhbG9uTU1fcmRfc2xhdmU=::dHJ1ZQ==::ZGVyaXZlZF91c2VfYXZhbG9uTU1fcmRfc2xhdmU="
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "ZGVyaXZlZF91c2VfYXZhbG9uU1Rfc291cmNl::ZmFsc2U=::ZGVyaXZlZF91c2VfYXZhbG9uU1Rfc291cmNl"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_COMPONENT_PARAMETER "ZGVyaXZlZF9zaW5rX3NvdXJjZV9hdmFsb25TVF93aWR0aA==::MzI=::ZGVyaXZlZF9zaW5rX3NvdXJjZV9hdmFsb25TVF93aWR0aA=="
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_NAME "c29jX3N5c3RlbV9maWZvX2gyZl9pbg=="
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_DISPLAY_NAME "QXZhbG9uIEZJRk8gTWVtb3J5IEludGVsIEZQR0EgSVA="
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_REPORT_HIERARCHY "Off"
@@ -7521,7 +7492,7 @@ set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -na
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_PARAMETER "c2luZ2xlQ2xvY2tNb2Rl::dHJ1ZQ==::Q2xvY2sgc2V0dGluZw=="
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_PARAMETER "c2luZ2xlUmVzZXRNb2Rl::ZmFsc2U=::c2luZ2xlUmVzZXRNb2Rl"
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_PARAMETER "c3ltYm9sc1BlckJlYXQ=::NA==::U3ltYm9scyBwZXIgYmVhdA=="
-set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlQmFja3ByZXNzdXJl::ZmFsc2U=::QWxsb3cgYmFja3ByZXNzdXJl"
+set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlQmFja3ByZXNzdXJl::dHJ1ZQ==::QWxsb3cgYmFja3ByZXNzdXJl"
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlSVJR::ZmFsc2U=::RW5hYmxlIElSUSBmb3Igc3RhdHVzIHBvcnRz"
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlUGFja2V0::dHJ1ZQ==::RW5hYmxlIHBhY2tldCBkYXRh"
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_COMPONENT_PARAMETER "dXNlUmVhZENvbnRyb2w=::ZmFsc2U=::Q3JlYXRlIHN0YXR1cyBpbnRlcmZhY2UgZm9yIG91dHB1dA=="
@@ -7916,7 +7887,6 @@ set_global_assignment -library "soc_system" -name MISC_FILE [file join $::quartu
 set_global_assignment -library "soc_system" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/soc_system_hps_0_fpga_interfaces.sv"]
 set_global_assignment -library "soc_system" -name SDC_FILE [file join $::quartus(qip_path) "submodules/soc_system_hps_0_fpga_interfaces.sdc"]
 set_global_assignment -library "soc_system" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/soc_system_fifo_h2f_out_mm.v"]
-set_global_assignment -library "soc_system" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/soc_system_fifo_h2f_out.v"]
 set_global_assignment -library "soc_system" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/soc_system_fifo_h2f_in.v"]
 set_global_assignment -library "soc_system" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/soc_system_fifo_f2h_out.v"]
 set_global_assignment -library "soc_system" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/soc_system_fifo_f2h_in_mm.v"]
@@ -8162,9 +8132,6 @@ set_global_assignment -entity "soc_system_hps_0" -library "soc_system" -name IP_
 set_global_assignment -entity "soc_system_hps_0_hps_io" -library "soc_system" -name IP_TOOL_NAME "altera_hps_io"
 set_global_assignment -entity "soc_system_hps_0_hps_io" -library "soc_system" -name IP_TOOL_VERSION "18.1"
 set_global_assignment -entity "soc_system_hps_0_hps_io" -library "soc_system" -name IP_TOOL_ENV "Qsys"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_TOOL_NAME "altera_avalon_fifo"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_TOOL_VERSION "18.1"
-set_global_assignment -entity "soc_system_fifo_h2f_out" -library "soc_system" -name IP_TOOL_ENV "Qsys"
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_TOOL_NAME "altera_avalon_fifo"
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_TOOL_VERSION "18.1"
 set_global_assignment -entity "soc_system_fifo_h2f_in" -library "soc_system" -name IP_TOOL_ENV "Qsys"
