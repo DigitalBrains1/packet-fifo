@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="soc_system" kind="soc_system" version="1.0" fabric="QSYS">
  <!-- Format version 18.1 625 (Future versions may contain additional information.) -->
- <!-- 2020.04.15.17:00:50 -->
+ <!-- 2020.04.23.15:53:00 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1586962832</value>
+  <value>1587649960</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -3529,7 +3529,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.USE_BACKPRESSURE</name>
-   <value>0</value>
+   <value>1</value>
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.USE_IRQ</name>
@@ -3649,7 +3649,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="useBackpressure">
    <type>boolean</type>
-   <value>false</value>
+   <value>true</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -3986,7 +3986,7 @@ parameters are a RESULT of the module parameters. -->
     <type>int</type>
     <value>0</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -4090,7 +4090,7 @@ parameters are a RESULT of the module parameters. -->
     <type>int</type>
     <value>1</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -4114,7 +4114,7 @@ parameters are a RESULT of the module parameters. -->
     <type>int</type>
     <value>0</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -4122,7 +4122,7 @@ parameters are a RESULT of the module parameters. -->
     <type>com.altera.sopcmodel.avalon.TimingUnits</type>
     <value>Cycles</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -4162,7 +4162,7 @@ parameters are a RESULT of the module parameters. -->
     <type>int</type>
     <value>0</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -4201,6 +4201,12 @@ parameters are a RESULT of the module parameters. -->
     <direction>Input</direction>
     <width>1</width>
     <role>address</role>
+   </port>
+   <port>
+    <name>avalonmm_write_slave_waitrequest</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>waitrequest</role>
    </port>
   </interface>
   <interface name="out" kind="avalon_streaming_source" version="18.1">
@@ -4289,7 +4295,7 @@ parameters are a RESULT of the module parameters. -->
    </parameter>
    <parameter name="readyLatency">
     <type>int</type>
-    <value>0</value>
+    <value>1</value>
     <derived>false</derived>
     <enabled>true</enabled>
     <visible>true</visible>
@@ -4350,6 +4356,12 @@ parameters are a RESULT of the module parameters. -->
     <direction>Output</direction>
     <width>2</width>
     <role>empty</role>
+   </port>
+   <port>
+    <name>avalonst_source_ready</name>
+    <direction>Input</direction>
+    <width>1</width>
+    <role>ready</role>
    </port>
   </interface>
  </module>
@@ -4978,7 +4990,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.USE_BACKPRESSURE</name>
-   <value>0</value>
+   <value>1</value>
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.USE_IRQ</name>
@@ -5098,7 +5110,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="useBackpressure">
    <type>boolean</type>
-   <value>false</value>
+   <value>true</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -5385,7 +5397,7 @@ parameters are a RESULT of the module parameters. -->
    </parameter>
    <parameter name="readyLatency">
     <type>int</type>
-    <value>0</value>
+    <value>1</value>
     <derived>false</derived>
     <enabled>true</enabled>
     <visible>true</visible>
@@ -5446,6 +5458,12 @@ parameters are a RESULT of the module parameters. -->
     <direction>Input</direction>
     <width>2</width>
     <role>empty</role>
+   </port>
+   <port>
+    <name>avalonst_sink_ready</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>ready</role>
    </port>
   </interface>
   <interface name="out" kind="avalon_slave" version="18.1">
@@ -5584,7 +5602,7 @@ parameters are a RESULT of the module parameters. -->
     <type>int</type>
     <value>0</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -5688,7 +5706,7 @@ parameters are a RESULT of the module parameters. -->
     <type>int</type>
     <value>0</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -5712,7 +5730,7 @@ parameters are a RESULT of the module parameters. -->
     <type>int</type>
     <value>0</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -5720,7 +5738,7 @@ parameters are a RESULT of the module parameters. -->
     <type>com.altera.sopcmodel.avalon.TimingUnits</type>
     <value>Cycles</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -5760,7 +5778,7 @@ parameters are a RESULT of the module parameters. -->
     <type>int</type>
     <value>0</value>
     <derived>false</derived>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <visible>true</visible>
     <valid>true</valid>
    </parameter>
@@ -5799,6 +5817,12 @@ parameters are a RESULT of the module parameters. -->
     <direction>Input</direction>
     <width>1</width>
     <role>address</role>
+   </port>
+   <port>
+    <name>avalonmm_read_slave_waitrequest</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>waitrequest</role>
    </port>
   </interface>
   <interface name="in_csr" kind="avalon_slave" version="18.1">
@@ -89240,7 +89264,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.TIMESTAMP</name>
-   <value>1586962832</value>
+   <value>1587649960</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.compatible</name>
@@ -89260,7 +89284,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.dts.params.timestamp</name>
-   <value>1586962832</value>
+   <value>1587649960</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.vendor</name>
@@ -89276,7 +89300,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="timestamp">
    <type>int</type>
-   <value>1586962832</value>
+   <value>1587649960</value>
    <derived>true</derived>
    <enabled>false</enabled>
    <visible>false</visible>

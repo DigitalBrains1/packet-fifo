@@ -18,7 +18,7 @@
 // altera message_level Level1 
 // altera message_off 10034 10035 10036 10037 10230 10240 10030 
 
-module soc_system_fifo_f2h_out_single_clock_fifo (
+module soc_system_fifo_h2f_out_single_clock_fifo (
                                                    // inputs:
                                                     aclr,
                                                     clock,
@@ -85,7 +85,7 @@ endmodule
 // altera message_level Level1 
 // altera message_off 10034 10035 10036 10037 10230 10240 10030 
 
-module soc_system_fifo_f2h_out_scfifo_with_controls (
+module soc_system_fifo_h2f_out_scfifo_with_controls (
                                                       // inputs:
                                                        clock,
                                                        data,
@@ -100,7 +100,6 @@ module soc_system_fifo_f2h_out_scfifo_with_controls (
                                                       // outputs:
                                                        empty,
                                                        full,
-                                                       level,
                                                        q,
                                                        wrclk_control_slave_irq,
                                                        wrclk_control_slave_readdata
@@ -109,7 +108,6 @@ module soc_system_fifo_f2h_out_scfifo_with_controls (
 
   output           empty;
   output           full;
-  output  [  9: 0] level;
   output  [ 31: 0] q;
   output           wrclk_control_slave_irq;
   output  [ 31: 0] wrclk_control_slave_readdata;
@@ -177,9 +175,8 @@ wire    [  5: 0] wrclk_control_slave_status_register;
 reg              wrclk_control_slave_status_underflow_q;
 wire             wrclk_control_slave_status_underflow_signal;
 wire    [  9: 0] wrclk_control_slave_threshold_writedata;
-wire             wrreq_valid;
   //the_scfifo, which is an e_instance
-  soc_system_fifo_f2h_out_single_clock_fifo the_scfifo
+  soc_system_fifo_h2f_out_single_clock_fifo the_scfifo
     (
       .aclr  (~reset_n),
       .clock (clock),
@@ -189,13 +186,12 @@ wire             wrreq_valid;
       .q     (q),
       .rdreq (rdreq),
       .usedw (usedw),
-      .wrreq (wrreq_valid)
+      .wrreq (wrreq)
     );
 
   assign level = {full,
     usedw};
 
-  assign wrreq_valid = wrreq & ~full;
   assign overflow = wrreq & full;
   assign underflow = rdreq & empty;
   assign wrclk_control_slave_threshold_writedata = (wrclk_control_slave_writedata < 1) ? 1 :
@@ -462,7 +458,7 @@ endmodule
 // altera message_level Level1 
 // altera message_off 10034 10035 10036 10037 10230 10240 10030 
 
-module soc_system_fifo_f2h_out_map_avalonst_to_avalonmm (
+module soc_system_fifo_h2f_out_map_avalonst_to_avalonmm (
                                                           // inputs:
                                                            avalonst_data,
 
@@ -492,7 +488,7 @@ endmodule
 // altera message_level Level1 
 // altera message_off 10034 10035 10036 10037 10230 10240 10030 
 
-module soc_system_fifo_f2h_out_single_clock_fifo_for_other_info (
+module soc_system_fifo_h2f_out_single_clock_fifo_for_other_info (
                                                                   // inputs:
                                                                    aclr,
                                                                    clock,
@@ -547,7 +543,7 @@ endmodule
 // altera message_level Level1 
 // altera message_off 10034 10035 10036 10037 10230 10240 10030 
 
-module soc_system_fifo_f2h_out_map_avalonst_to_avalonmm_other_info (
+module soc_system_fifo_h2f_out_map_avalonst_to_avalonmm_other_info (
                                                                      // inputs:
                                                                       avalonst_other_info,
 
@@ -592,7 +588,7 @@ endmodule
 // altera message_level Level1 
 // altera message_off 10034 10035 10036 10037 10230 10240 10030 
 
-module soc_system_fifo_f2h_out (
+module soc_system_fifo_h2f_out (
                                  // inputs:
                                   avalonmm_read_slave_address,
                                   avalonmm_read_slave_read,
@@ -610,16 +606,12 @@ module soc_system_fifo_f2h_out (
 
                                  // outputs:
                                   avalonmm_read_slave_readdata,
-                                  avalonmm_read_slave_waitrequest,
-                                  avalonst_sink_ready,
                                   wrclk_control_slave_irq,
                                   wrclk_control_slave_readdata
                                )
 ;
 
   output  [ 31: 0] avalonmm_read_slave_readdata;
-  output           avalonmm_read_slave_waitrequest;
-  output           avalonst_sink_ready;
   output           wrclk_control_slave_irq;
   output  [ 31: 0] wrclk_control_slave_readdata;
   input            avalonmm_read_slave_address;
@@ -642,34 +634,25 @@ wire    [ 31: 0] avalonmm_other_info_map_out;
 reg              avalonmm_read_slave_address_delayed;
 reg              avalonmm_read_slave_read_delayed;
 wire    [ 31: 0] avalonmm_read_slave_readdata;
-wire             avalonmm_read_slave_waitrequest;
 wire    [ 31: 0] avalonst_map_data_in;
 wire    [  3: 0] avalonst_other_info_map_in;
-wire             avalonst_sink_ready;
 wire             clock;
 wire    [ 31: 0] data;
-wire             deassert_waitrequest;
 wire             empty;
 wire             full;
-wire    [  9: 0] level;
-wire             no_stop_write;
-reg              no_stop_write_d1;
 wire    [ 31: 0] q;
 wire             rdreq;
 wire             rdreq_driver;
-wire             ready_1;
-wire             ready_selector;
 wire             wrclk_control_slave_irq;
 wire    [ 31: 0] wrclk_control_slave_readdata;
 wire             wrreq;
   //the_scfifo_with_controls, which is an e_instance
-  soc_system_fifo_f2h_out_scfifo_with_controls the_scfifo_with_controls
+  soc_system_fifo_h2f_out_scfifo_with_controls the_scfifo_with_controls
     (
       .clock                         (clock),
       .data                          (data),
       .empty                         (empty),
       .full                          (full),
-      .level                         (level),
       .q                             (q),
       .rdreq                         (rdreq),
       .reset_n                       (reset_n),
@@ -683,10 +666,8 @@ wire             wrreq;
     );
 
   //out, which is an e_avalon_slave
-  assign deassert_waitrequest = avalonmm_read_slave_address & avalonmm_read_slave_read;
-  assign avalonmm_read_slave_waitrequest = !deassert_waitrequest & empty;
   //the_map_avalonst_to_avalonmm, which is an e_instance
-  soc_system_fifo_f2h_out_map_avalonst_to_avalonmm the_map_avalonst_to_avalonmm
+  soc_system_fifo_h2f_out_map_avalonst_to_avalonmm the_map_avalonst_to_avalonmm
     (
       .avalonmm_data (avalonmm_map_data_out),
       .avalonst_data (avalonst_map_data_in)
@@ -697,22 +678,9 @@ wire             wrreq;
   assign avalonst_map_data_in = q;
   assign rdreq = rdreq_driver;
   assign data = avalonst_sink_data;
-  assign wrreq = avalonst_sink_valid & no_stop_write_d1;
-  assign no_stop_write = ready_selector & ready_1;
-  assign ready_1 = !full;
-  assign ready_selector = level < 511;
-  always @(posedge clock or negedge reset_n)
-    begin
-      if (reset_n == 0)
-          no_stop_write_d1 <= 0;
-      else 
-        no_stop_write_d1 <= no_stop_write;
-    end
-
-
-  assign avalonst_sink_ready = (reset_n == 0) ? 1'b0 : (no_stop_write & no_stop_write_d1);
+  assign wrreq = avalonst_sink_valid;
   //the_scfifo_other_info, which is an e_instance
-  soc_system_fifo_f2h_out_single_clock_fifo_for_other_info the_scfifo_other_info
+  soc_system_fifo_h2f_out_single_clock_fifo_for_other_info the_scfifo_other_info
     (
       .aclr  (~reset_n),
       .clock (clock),
@@ -721,11 +689,11 @@ avalonst_sink_endofpacket,
 avalonst_sink_startofpacket}),
       .q     (avalonst_other_info_map_in),
       .rdreq ((avalonmm_read_slave_address == 0) & avalonmm_read_slave_read),
-      .wrreq (avalonst_sink_valid & no_stop_write_d1)
+      .wrreq (avalonst_sink_valid)
     );
 
   //the_map_avalonst_to_avalonmm_other_info, which is an e_instance
-  soc_system_fifo_f2h_out_map_avalonst_to_avalonmm_other_info the_map_avalonst_to_avalonmm_other_info
+  soc_system_fifo_h2f_out_map_avalonst_to_avalonmm_other_info the_map_avalonst_to_avalonmm_other_info
     (
       .avalonmm_other_info (avalonmm_other_info_map_out),
       .avalonst_other_info (avalonst_other_info_map_in)
