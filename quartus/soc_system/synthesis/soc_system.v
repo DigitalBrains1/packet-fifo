@@ -379,11 +379,12 @@ module soc_system (
 	wire    [7:0] mm_interconnect_7_hps_0_f2h_sdram0_data_burstcount;        // mm_interconnect_7:hps_0_f2h_sdram0_data_burstcount -> hps_0:f2h_sdram0_BURSTCOUNT
 	wire    [2:0] ilc_irq_irq;                                               // irq_mapper:sender_irq -> ILC:irq
 	wire          irq_mapper_001_receiver0_irq;                              // fifo_f2h_out:wrclk_control_slave_irq -> irq_mapper_001:receiver0_irq
+	wire          irq_mapper_001_receiver1_irq;                              // fifo_h2f_in:wrclk_control_slave_irq -> irq_mapper_001:receiver1_irq
 	wire   [31:0] hps_0_f2h_irq0_irq;                                        // irq_mapper_001:sender_irq -> hps_0:f2h_irq_p0
 	wire   [31:0] hps_0_f2h_irq1_irq;                                        // irq_mapper_002:sender_irq -> hps_0:f2h_irq_p1
-	wire          irq_mapper_receiver1_irq;                                  // button_pio:irq -> [irq_mapper:receiver1_irq, irq_mapper_001:receiver2_irq]
-	wire          irq_mapper_receiver2_irq;                                  // dipsw_pio:irq -> [irq_mapper:receiver2_irq, irq_mapper_001:receiver3_irq]
-	wire          irq_mapper_receiver0_irq;                                  // jtag_uart:av_irq -> [irq_mapper:receiver0_irq, irq_mapper_001:receiver1_irq]
+	wire          irq_mapper_receiver1_irq;                                  // button_pio:irq -> [irq_mapper:receiver1_irq, irq_mapper_001:receiver3_irq]
+	wire          irq_mapper_receiver2_irq;                                  // dipsw_pio:irq -> [irq_mapper:receiver2_irq, irq_mapper_001:receiver4_irq]
+	wire          irq_mapper_receiver0_irq;                                  // jtag_uart:av_irq -> [irq_mapper:receiver0_irq, irq_mapper_001:receiver2_irq]
 	wire          rst_controller_reset_out_reset;                            // rst_controller:reset_out -> [ILC:reset_n, button_pio:reset_n, dipsw_pio:reset_n, fifo_f2h_in:reset_n, fifo_f2h_in_mm:reset, fifo_f2h_out:reset_n, fifo_h2f_in:reset_n, fifo_h2f_out:reset_n, fifo_h2f_out_mm:reset, irq_mapper:reset, jtag_uart:rst_n, led_pio:reset_n, mm_bridge_0:reset, mm_bridge_1:reset, mm_interconnect_0:fifo_f2h_in_mm_reset_reset_bridge_in_reset_reset, mm_interconnect_1:fifo_h2f_out_mm_reset_reset_bridge_in_reset_reset, mm_interconnect_2:mm_bridge_1_reset_reset_bridge_in_reset_reset, mm_interconnect_3:mm_bridge_0_reset_reset_bridge_in_reset_reset, mm_interconnect_4:fpga_only_master_clk_reset_reset_bridge_in_reset_reset, mm_interconnect_4:mm_bridge_0_reset_reset_bridge_in_reset_reset, mm_interconnect_5:mm_bridge_1_reset_reset_bridge_in_reset_reset, mm_interconnect_6:hps_only_master_clk_reset_reset_bridge_in_reset_reset, mm_interconnect_6:hps_only_master_master_translator_reset_reset_bridge_in_reset_reset, mm_interconnect_7:f2sdram_only_master_clk_reset_reset_bridge_in_reset_reset, mm_interconnect_7:f2sdram_only_master_master_translator_reset_reset_bridge_in_reset_reset, sysid_qsys:reset_n]
 	wire          rst_controller_001_reset_out_reset;                        // rst_controller_001:reset_out -> [mm_interconnect_2:hps_0_h2f_axi_master_agent_clk_reset_reset_bridge_in_reset_reset, mm_interconnect_3:hps_0_h2f_lw_axi_master_agent_clk_reset_reset_bridge_in_reset_reset, mm_interconnect_6:hps_0_f2h_axi_slave_agent_reset_sink_reset_bridge_in_reset_reset, mm_interconnect_7:hps_0_f2h_sdram0_data_translator_reset_reset_bridge_in_reset_reset]
 
@@ -516,10 +517,11 @@ module soc_system (
 		.wrclk_control_slave_read         (mm_interconnect_5_fifo_h2f_in_in_csr_read),      //         .read
 		.wrclk_control_slave_writedata    (mm_interconnect_5_fifo_h2f_in_in_csr_writedata), //         .writedata
 		.wrclk_control_slave_write        (mm_interconnect_5_fifo_h2f_in_in_csr_write),     //         .write
-		.wrclk_control_slave_readdata     (mm_interconnect_5_fifo_h2f_in_in_csr_readdata)   //         .readdata
+		.wrclk_control_slave_readdata     (mm_interconnect_5_fifo_h2f_in_in_csr_readdata),  //         .readdata
+		.wrclk_control_slave_irq          (irq_mapper_001_receiver1_irq)                    //   in_irq.irq
 	);
 
-	soc_system_fifo_f2h_out fifo_h2f_out (
+	soc_system_fifo_h2f_out fifo_h2f_out (
 		.wrclock                         (clk_clk),                                         //   clk_in.clk
 		.reset_n                         (~rst_controller_reset_out_reset),                 // reset_in.reset_n
 		.avalonst_sink_valid             (fifo_h2f_in_out_valid),                           //       in.valid
@@ -536,8 +538,7 @@ module soc_system (
 		.wrclk_control_slave_read        (mm_interconnect_1_fifo_h2f_out_in_csr_read),      //         .read
 		.wrclk_control_slave_writedata   (mm_interconnect_1_fifo_h2f_out_in_csr_writedata), //         .writedata
 		.wrclk_control_slave_write       (mm_interconnect_1_fifo_h2f_out_in_csr_write),     //         .write
-		.wrclk_control_slave_readdata    (mm_interconnect_1_fifo_h2f_out_in_csr_readdata),  //         .readdata
-		.wrclk_control_slave_irq         ()                                                 //   in_irq.irq
+		.wrclk_control_slave_readdata    (mm_interconnect_1_fifo_h2f_out_in_csr_readdata)   //         .readdata
 	);
 
 	soc_system_fifo_h2f_out_mm fifo_h2f_out_mm (
@@ -1225,9 +1226,10 @@ module soc_system (
 		.clk           (),                             //       clk.clk
 		.reset         (),                             // clk_reset.reset
 		.receiver0_irq (irq_mapper_001_receiver0_irq), // receiver0.irq
-		.receiver1_irq (irq_mapper_receiver0_irq),     // receiver1.irq
-		.receiver2_irq (irq_mapper_receiver1_irq),     // receiver2.irq
-		.receiver3_irq (irq_mapper_receiver2_irq),     // receiver3.irq
+		.receiver1_irq (irq_mapper_001_receiver1_irq), // receiver1.irq
+		.receiver2_irq (irq_mapper_receiver0_irq),     // receiver2.irq
+		.receiver3_irq (irq_mapper_receiver1_irq),     // receiver3.irq
+		.receiver4_irq (irq_mapper_receiver2_irq),     // receiver4.irq
 		.sender_irq    (hps_0_f2h_irq0_irq)            //    sender.irq
 	);
 

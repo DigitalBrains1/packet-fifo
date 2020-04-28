@@ -67,7 +67,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
   </table>
   <table class="blueBar">
    <tr>
-    <td class="l">2020.04.23.16:49:01</td>
+    <td class="l">2020.04.24.16:49:23</td>
     <td class="r">Datasheet</td>
    </tr>
   </table>
@@ -3004,7 +3004,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        <a href="#module_mm_bridge_1">mm_bridge_1</a>
       </td>
       <td class="from">m0&#160;&#160;</td>
-      <td class="main" rowspan="11">fifo_h2f_in</td>
+      <td class="main" rowspan="14">fifo_h2f_in</td>
      </tr>
      <tr>
       <td class="to">&#160;&#160;in</td>
@@ -3032,6 +3032,18 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
      </tr>
      <tr>
       <td class="to">&#160;&#160;reset_in</td>
+     </tr>
+     <tr style="height:6px">
+      <td></td>
+     </tr>
+     <tr>
+      <td class="neighbor" rowspan="2">
+       <a href="#module_hps_0_arm_gic_0">hps_0_arm_gic_0</a>
+      </td>
+      <td class="from">f2h_irq_0_irq_rx_offset_40&#160;&#160;</td>
+     </tr>
+     <tr>
+      <td class="to">&#160;&#160;in_irq</td>
      </tr>
      <tr>
       <td></td>
@@ -3077,7 +3089,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">fifoDepth</td>
-        <td class="parametervalue">8</td>
+        <td class="parametervalue">512</td>
        </tr>
        <tr>
         <td class="parametername">fifoInputInterfaceOptions</td>
@@ -3109,7 +3121,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">useIRQ</td>
-        <td class="parametervalue">false</td>
+        <td class="parametervalue">true</td>
        </tr>
        <tr>
         <td class="parametername">usePacket</td>
@@ -3190,7 +3202,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">FIFO_DEPTH</td>
-        <td class="parametervalue">8</td>
+        <td class="parametervalue">512</td>
        </tr>
        <tr>
         <td class="parametername">SINGLE_CLOCK_MODE</td>
@@ -3222,7 +3234,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">USE_IRQ</td>
-        <td class="parametervalue">0</td>
+        <td class="parametervalue">1</td>
        </tr>
        <tr>
         <td class="parametername">USE_PACKET</td>
@@ -3329,7 +3341,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">fifoDepth</td>
-        <td class="parametervalue">512</td>
+        <td class="parametervalue">8</td>
        </tr>
        <tr>
         <td class="parametername">fifoInputInterfaceOptions</td>
@@ -3361,7 +3373,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">useIRQ</td>
-        <td class="parametervalue">true</td>
+        <td class="parametervalue">false</td>
        </tr>
        <tr>
         <td class="parametername">usePacket</td>
@@ -3442,7 +3454,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">FIFO_DEPTH</td>
-        <td class="parametervalue">512</td>
+        <td class="parametervalue">8</td>
        </tr>
        <tr>
         <td class="parametername">SINGLE_CLOCK_MODE</td>
@@ -3474,7 +3486,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">USE_IRQ</td>
-        <td class="parametervalue">1</td>
+        <td class="parametervalue">0</td>
        </tr>
        <tr>
         <td class="parametername">USE_PACKET</td>
@@ -25309,7 +25321,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        <a href="#module_hps_0_clk_0">hps_0_clk_0</a>
       </td>
       <td class="from">clk_reset&#160;&#160;</td>
-      <td class="main" rowspan="124">hps_0_arm_gic_0</td>
+      <td class="main" rowspan="127">hps_0_arm_gic_0</td>
      </tr>
      <tr>
       <td class="to">&#160;&#160;reset_sink</td>
@@ -25880,6 +25892,22 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
       <td class="from">f2h_irq_0_irq_rx_offset_40&#160;&#160;</td>
       <td class="neighbor" rowspan="2">
        <a href="#module_fifo_f2h_out">fifo_f2h_out</a>
+      </td>
+     </tr>
+     <tr>
+      <td></td>
+      <td></td>
+      <td class="to">&#160;&#160;in_irq</td>
+     </tr>
+     <tr style="height:6px">
+      <td></td>
+     </tr>
+     <tr>
+      <td></td>
+      <td></td>
+      <td class="from">f2h_irq_0_irq_rx_offset_40&#160;&#160;</td>
+      <td class="neighbor" rowspan="2">
+       <a href="#module_fifo_h2f_in">fifo_h2f_in</a>
       </td>
      </tr>
      <tr>
@@ -32242,7 +32270,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">timestamp</td>
-        <td class="parametervalue">1587653322</td>
+        <td class="parametervalue">1587739745</td>
        </tr>
        <tr>
         <td class="parametername">deviceFamily</td>
@@ -32267,7 +32295,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
        </tr>
        <tr>
         <td class="parametername">TIMESTAMP</td>
-        <td class="parametervalue">1587653322</td>
+        <td class="parametervalue">1587739745</td>
        </tr>
       </table>
      </td>
@@ -32277,7 +32305,7 @@ div.greydiv { vertical-align:top ; text-align:center ; background:#eeeeee ; bord
   <table class="blueBar">
    <tr>
     <td class="l">generation took 0.03 seconds</td>
-    <td class="r">rendering took 1.06 seconds</td>
+    <td class="r">rendering took 0.50 seconds</td>
    </tr>
   </table>
  </body>

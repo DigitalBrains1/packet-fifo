@@ -47,8 +47,8 @@ have_f2h_intr(const struct rdfifo_ctx *f2h_ctx)
 
 /*
  * The FIFOs have the following depths:
- * h2f_in: 8
- * (h2f_out: 512)
+ * h2f_in: 512
+ * (h2f_out: 8)
  * (f2h_in: 8)
  * h2f_out: 512
  *

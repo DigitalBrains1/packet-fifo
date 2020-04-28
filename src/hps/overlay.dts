@@ -27,6 +27,7 @@
 					reg = <0x00000000 0x00000020 0x00000008>,
 						<0x00000000 0x00000000 0x00000020>;
 					reg-names = "in", "in_csr";
+					interrupts = <0 44 4>;
 				}; //end fifo@0x000000020 (fifo_h2f_in)
 
 				fifo_f2h_out: fifo@0x000001000 {
@@ -69,7 +70,7 @@
 						compatible = "altr,sysid-18.1", "altr,sysid-1.0";
 						reg = <0x00001000 0x00000008>;
 						id = <2899645186>;	/* embeddedsw.dts.params.id type NUMBER */
-						timestamp = <1586962832>;	/* embeddedsw.dts.params.timestamp type NUMBER */
+						timestamp = <1587739745>;	/* embeddedsw.dts.params.timestamp type NUMBER */
 					}; //end sysid@0x1000 (sysid_qsys)
 
 					button_pio: gpio@0x5000 {
@@ -110,6 +111,7 @@
 					}; //end gpio@0x3000 (led_pio)
 				}; //end bridge@0x100000000 (mm_bridge_0)
 			}; //end bridge@0xc0000000 (hps_0_bridges)
+
 		};
 	};
 

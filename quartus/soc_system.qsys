@@ -486,7 +486,7 @@
   <parameter name="channelWidth" value="0" />
   <parameter name="deviceFamilyString" value="Cyclone V" />
   <parameter name="errorWidth" value="0" />
-  <parameter name="fifoDepth" value="8" />
+  <parameter name="fifoDepth" value="512" />
   <parameter name="fifoInputInterfaceOptions" value="AVALONMM_WRITE" />
   <parameter name="fifoOutputInterfaceOptions" value="AVALONST_SOURCE" />
   <parameter name="showHiddenFeatures" value="false" />
@@ -494,7 +494,7 @@
   <parameter name="singleResetMode" value="false" />
   <parameter name="symbolsPerBeat" value="4" />
   <parameter name="useBackpressure" value="true" />
-  <parameter name="useIRQ" value="false" />
+  <parameter name="useIRQ" value="true" />
   <parameter name="usePacket" value="true" />
   <parameter name="useReadControl" value="false" />
   <parameter name="useRegister" value="false" />
@@ -511,7 +511,7 @@
   <parameter name="channelWidth" value="0" />
   <parameter name="deviceFamilyString" value="Cyclone V" />
   <parameter name="errorWidth" value="0" />
-  <parameter name="fifoDepth" value="512" />
+  <parameter name="fifoDepth" value="8" />
   <parameter name="fifoInputInterfaceOptions" value="AVALONST_SINK" />
   <parameter name="fifoOutputInterfaceOptions" value="AVALONMM_READ" />
   <parameter name="showHiddenFeatures" value="false" />
@@ -519,7 +519,7 @@
   <parameter name="singleResetMode" value="false" />
   <parameter name="symbolsPerBeat" value="4" />
   <parameter name="useBackpressure" value="true" />
-  <parameter name="useIRQ" value="true" />
+  <parameter name="useIRQ" value="false" />
   <parameter name="usePacket" value="true" />
   <parameter name="useReadControl" value="false" />
   <parameter name="useRegister" value="false" />
@@ -1462,6 +1462,13 @@
    start="hps_0.f2h_irq0"
    end="fifo_f2h_out.in_irq">
   <parameter name="irqNumber" value="3" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="18.1"
+   start="hps_0.f2h_irq0"
+   end="fifo_h2f_in.in_irq">
+  <parameter name="irqNumber" value="4" />
  </connection>
  <connection
    kind="interrupt"
