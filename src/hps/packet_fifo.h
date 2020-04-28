@@ -130,6 +130,11 @@ close_rdfifo(struct rdfifo_ctx *ctx);
  *
  * A context is allocated by this function and freed by close_rdfifo().
  *
+ * If possible, the FIFO will have ctx->mode = FIFO_INTR, and backpressure is
+ * used to prevent overflows. If the FIFO is missing the needed support,
+ * ctx->mode = FIFO_FREE_RUNNING and FIFO overflows will lead to data loss and
+ * potential packet corruption (two partial packets being joined into one).
+ *
  * @param ctx[out] Passes back to the caller a pointer to the allocated
  *                 context.
  * @param info The uio device for this write-side FIFO.
@@ -144,6 +149,21 @@ init_wrfifo(struct wrfifo_ctx **ctx, const struct uio_info_t *info);
  */
 extern void
 close_wrfifo(struct wrfifo_ctx *ctx);
+
+/*
+ * Set the threshold at which to interrupt.
+ *
+ * If the fill level of the FIFO drops to this many 32-bit words, an interrupt
+ * is generated to indicate new data can be written to the FIFO.
+ *
+ * The hardware will limit the range of the value that is actually used to
+ * between 1 and 1 less than the maximum fill level of the FIFO, inclusive.
+ *
+ * @returns The actual threshold that the hardware is using, or one of the
+ * 	    defined error codes.
+ */
+ssize_t
+set_wrfifo_thresh(const struct wrfifo_ctx *ctx, size_t thresh);
 
 /*
  * Read from a FIFO.
@@ -182,14 +202,44 @@ fifo_read(struct rdfifo_ctx *ctx);
 /*
  * Write to a FIFO.
  *
- * TODO: Implement backpressure. The current implementation will happily
- * overflow and corrupt data.
+ * For a FIFO with ctx->mode == FIFO_FREE_RUNNING, FIFO overflows are not
+ * detected and this function always writes `len` bytes of data. This might
+ * cause data loss if the FIFO is not emptied fast enough.
+ *
+ * A FIFO with ctx->mode == FIFO_INTR will not overflow. If the return value
+ * indicates not all bytes have been written, the FIFO was full. An interrupt
+ * will be generated once the free room in the FIFO drops below the configured
+ * threshold (which is set to a sane value by `init_wrfifo()` and can be
+ * modified using `set_wrfifo_thresh()`).
+ *
+ * `select()` for reading on `ctx->uio_fd` to wait for the interrupt. When
+ * `select()` indicates readiness, do `read(ctx->uio_fd, &dummy, 4)`. Now
+ * `fifo_write()` can be called again to write more data to the FIFO.
+ *
+ * The 4-byte read from `uio_fd` returns an `int32_t` counter counting the
+ * number of occurred interrupts. It can be discarded in this application, but
+ * needs to be read so `select()` will once again block on the next
+ * invocation.
+ *
+ * Don't `select()` if `fifo_write()` did not indicate a short write!
+ * Furthermore, it cannot be assumed that there will be space to write when an
+ * interrupt occurred; safety is only in the other direction (an interrupt
+ * will definitely occur if there is space to write new data). Calling
+ * `fifo_write()` when there is no space to write is not a problem; it will
+ * just return 0, indicating no data has been written.
+ *
+ * There is one unintended mode of operation. If the FIFO does not support
+ * FIFO_INTR, but it does have backpressure enabled in Intel Platform Designer
+ * (QSys), the whole processor will stall until the data can be written to the
+ * FIFO. So there are no overruns, but only very short stalls are likely not
+ * to break the overall functioning of your HPS system.
  *
  * @param ctx The write context for the FIFO.
  * @param buf The data to be written.
  * @param len The number of bytes to write.
+ * @returns The actual number of bytes written to the FIFO.
  */
-extern void
+extern size_t
 fifo_write(const struct wrfifo_ctx *ctx, const void *buf, size_t len);
 
 #endif /* ndef FILE_PACKET_FIFO_H */

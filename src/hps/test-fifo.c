@@ -31,18 +31,44 @@ hexdump(void *data, size_t len)
 }
 
 static int
-have_f2h_intr(const struct rdfifo_ctx *f2h_ctx)
+have_intr(int fd)
 {
 	fd_set fds;
 	struct timeval small_time = { 0, 50000 };
 
 	FD_ZERO(&fds);
-	FD_SET(f2h_ctx->uio_fd, &fds);
-	select(f2h_ctx->uio_fd + 1, &fds, NULL, NULL, &small_time);
-	if (FD_ISSET(f2h_ctx->uio_fd, &fds))
+	FD_SET(fd, &fds);
+	select(fd + 1, &fds, NULL, NULL, &small_time);
+	if (FD_ISSET(fd, &fds))
 		return 1;
 	else
 		return 0;
+}
+
+static int
+vfy_no_intr(int fd)
+{
+	printf("Interrupt: ");
+	if (have_intr(fd)) {
+		printf("yes - UNEXPECTED.\n");
+		return 1;
+	} else {
+		printf("no.\n");
+		return 0;
+	}
+}
+
+static int
+vfy_intr(int fd)
+{
+	printf("Interrupt: ");
+	if (have_intr(fd)) {
+		printf("yes.\n");
+		return 0;
+	} else {
+		printf("no - UNEXPECTED.\n");
+		return 1;
+	}
 }
 
 /*
@@ -133,7 +159,7 @@ analyze_backpr(struct rdfifo_ctx *f2h_ctx, const struct wrfifo_ctx *h2f_ctx)
 				seen = data;
 			}
 		} else if (res == FIFO_NEED_MORE) {
-			if (!have_f2h_intr(f2h_ctx)) {
+			if (!have_intr(f2h_ctx->uio_fd)) {
 				break;
 			}
 		} else {
@@ -144,6 +170,92 @@ analyze_backpr(struct rdfifo_ctx *f2h_ctx, const struct wrfifo_ctx *h2f_ctx)
 	}
 	if (seen != sendpkt)
 		printf("Data gap %d-%d\n", seen+1, sendpkt);
+	return 0;
+}
+
+static int
+vfy_fifo_write(const char *name, ssize_t expect, const struct wrfifo_ctx *ctx,
+		const void *buf, size_t len)
+{
+	ssize_t res;
+
+	res = fifo_write(ctx, buf, len);
+	printf("fifo_write() %s: %d", name, res);
+	if (res != expect) {
+		printf(" - ERROR!\n");
+		return 1;
+	} else {
+		putchar('\n');
+		return 0;
+	}
+}
+
+static void
+dump_ae(const struct wrfifo_ctx *ctx)
+{
+	printf("AE status: %s\n", mmio_read32(ctx->csr.reg_base,
+			FIFO_STATUS_REG) & FIFO_STATUS_AE ? "set" : "unset");
+	printf("AE event: %s\n", mmio_read32(ctx->csr.reg_base,
+			FIFO_EVENT_REG) & FIFO_EVENT_AE ? "set" : "unset");
+	printf("AE ienable: %s\n", mmio_read32(ctx->csr.reg_base,
+			FIFO_IENABLE_REG) & FIFO_IENABLE_AE ? "set" :
+			"unset");
+}
+
+static int
+test_wrfifo(struct rdfifo_ctx *f2h_ctx, const struct wrfifo_ctx *h2f_ctx)
+{
+	ssize_t thresh;
+	uint32_t sendpkt[] = {
+			0xFEEDFACE, 0xDEADBEEF, 0xC0DEBABE, 0xC0DED00D };
+
+	if (h2f_ctx->mode != FIFO_INTR) {
+		fprintf(stderr, "h2f mode != FIFO_INTR.\n");
+		return 1;
+	}
+	thresh = set_wrfifo_thresh(h2f_ctx, h2f_ctx->depth - 1);
+	if (thresh != h2f_ctx->depth -1) {
+		fprintf(stderr, "Unexpected wr_thresh %d.\n", thresh);
+		return 1;
+	}
+	if (have_intr(h2f_ctx->uio_fd))
+		printf("Note: clearing pending interrupt on startup.\n");
+	dump_ae(h2f_ctx);
+	printf("Filling up FIFOs...\n");
+	while(((ssize_t) mmio_read32(h2f_ctx->csr.reg_base, FIFO_LEVEL_REG))
+			!= h2f_ctx->depth)
+		fifo_write(h2f_ctx, &sendpkt, 4);
+	dump_ae(h2f_ctx);
+	vfy_fifo_write("when full", 0, h2f_ctx, &sendpkt, 4);
+	dump_ae(h2f_ctx);
+	vfy_no_intr(h2f_ctx->uio_fd);
+	printf("Free room: %d.\n", h2f_ctx->depth -
+			mmio_read32(h2f_ctx->csr.reg_base, FIFO_LEVEL_REG));
+	fifo_read(f2h_ctx);
+	printf("Free room: %d.\n", h2f_ctx->depth -
+			mmio_read32(h2f_ctx->csr.reg_base, FIFO_LEVEL_REG));
+	dump_ae(h2f_ctx);
+	vfy_intr(h2f_ctx->uio_fd);
+	dump_ae(h2f_ctx);
+	printf("Filling up FIFOs...\n");
+	while(((ssize_t) mmio_read32(h2f_ctx->csr.reg_base, FIFO_LEVEL_REG))
+			!= h2f_ctx->depth - 1)
+		fifo_write(h2f_ctx, &sendpkt, 4);
+	vfy_fifo_write("tail over-limit", 4, h2f_ctx, &sendpkt, 8);
+	fifo_read(f2h_ctx);
+	fifo_read(f2h_ctx);
+	printf("Free room: %d.\n", h2f_ctx->depth -
+			mmio_read32(h2f_ctx->csr.reg_base, FIFO_LEVEL_REG));
+	vfy_intr(h2f_ctx->uio_fd);
+	printf("Filling up FIFOs...\n");
+	while(((ssize_t) mmio_read32(h2f_ctx->csr.reg_base, FIFO_LEVEL_REG))
+			!= h2f_ctx->depth - 2)
+		fifo_write(h2f_ctx, &sendpkt, 4);
+	vfy_fifo_write("short write_word()", 8, h2f_ctx, &sendpkt, 16);
+	printf("Empty FIFOs...\n");
+	while(mmio_read32(f2h_ctx->csr.reg_base, FIFO_LEVEL_REG))
+		mmio_read32(f2h_ctx->out.reg_base, FIFO_DATA_REG);
+	dump_ae(h2f_ctx);
 	return 0;
 }
 
@@ -191,6 +303,7 @@ main()
 	tc_evflag_edge(f2h_ctx, h2f_ctx);
 
 	analyze_backpr(f2h_ctx, h2f_ctx);
+	test_wrfifo(f2h_ctx, h2f_ctx);
 
 	close_rdfifo(f2h_ctx);
 	close_wrfifo(h2f_ctx);

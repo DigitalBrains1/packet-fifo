@@ -256,8 +256,11 @@ init_wrfifo(struct wrfifo_ctx **ctx, const struct uio_info_t *info)
 				INT32_MAX);
 		(*ctx)->depth = ((size_t) mmio_read32((*ctx)->csr.reg_base,
 					FIFO_ALMOSTEMPTY_REG)) + 1;
+		mmio_write32((*ctx)->csr.reg_base, FIFO_IENABLE_REG, 0);
 		mmio_write32((*ctx)->csr.reg_base, FIFO_ALMOSTEMPTY_REG,
 				(*ctx)->depth / 2);
+		mmio_write32((*ctx)->csr.reg_base, FIFO_EVENT_REG,
+				FIFO_EVENT_ALL);
 
 	} else {
 		(*ctx)->csr.reg_base = NULL;
@@ -298,6 +301,20 @@ close_wrfifo(struct wrfifo_ctx *ctx)
 	if (ctx->uio_fd != -1)
 		close(ctx->uio_fd);
 	free(ctx);
+}
+
+ssize_t
+set_wrfifo_thresh(const struct wrfifo_ctx *ctx, size_t thresh)
+{
+	if (!ctx->csr.reg_base)
+		return FIFO_GENERAL_ERROR;
+	if (thresh > INT32_MAX)
+		/* INT32_MAX is unambiguously positive and large enough. */
+		thresh = INT32_MAX;
+	mmio_write32(ctx->csr.reg_base, FIFO_ALMOSTEMPTY_REG,
+			(uint32_t) thresh);
+	return (ssize_t) mmio_read32((ctx)->csr.reg_base,
+			FIFO_ALMOSTEMPTY_REG);
 }
 
 /*
@@ -377,12 +394,61 @@ fifo_read(struct rdfifo_ctx *ctx)
 	return 0;
 }
 
-void
+/*
+ * Write 32-bit words to the FIFO.
+ *
+ * @param ctx The write context for the FIFO.
+ * @param buf The data to be written.
+ * @param len The number of 32-bit words(!) to write.
+ * @returns The number of 32-bit words(!) written.
+ */
+static size_t
+write_words(const struct wrfifo_ctx *ctx, const uint8_t *buf8,
+		size_t len, size_t *free_words)
+{
+	size_t i;
+	uint32_t word;
+
+	for (i = 0; i < len;) {
+		memcpy(&word, &buf8[i*4], 4);
+		mmio_write32(ctx->in.reg_base, FIFO_DATA_REG,
+				ntohl(word));
+		i++;
+		if (!--(*free_words)) {
+			mmio_write32(ctx->csr.reg_base, FIFO_EVENT_REG,
+					FIFO_EVENT_AE);
+			*free_words = ctx->depth - (size_t)
+					mmio_read32(ctx->csr.reg_base,
+					FIFO_LEVEL_REG);
+			if (!*free_words)
+				break;
+		}
+	}
+	return i;
+}
+
+
+size_t
 fifo_write(const struct wrfifo_ctx *ctx, const void *buf, size_t len)
 {
 	const uint8_t *buf8 = (const uint8_t *) buf;
 	uint32_t word;
-	size_t num_words, num_tail, i;
+	size_t num_words, num_tail, free_words, i;
+
+	if (ctx->mode == FIFO_INTR) {
+		mmio_write32(ctx->csr.reg_base, FIFO_EVENT_REG,
+				FIFO_EVENT_AE);
+		free_words = ctx->depth - (size_t)
+				mmio_read32(ctx->csr.reg_base,
+				FIFO_LEVEL_REG);
+		if (!free_words) {
+			mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
+					FIFO_IENABLE_AE);
+			return 0;
+		}
+	} else {
+		free_words = SIZE_MAX;
+	}
 
 	/* Number of words not containing last byte */
 	num_words = (len - 1) >> 2;
@@ -392,10 +458,11 @@ fifo_write(const struct wrfifo_ctx *ctx, const void *buf, size_t len)
 	if (num_words != 0) {
 		mmio_write32(ctx->in.reg_base, FIFO_OTHER_INFO_REG,
 				FIFO_INFO_SOP);
-		for (i = 0; i < num_words * 4; i += 4) {
-			memcpy(&word, &buf8[i], 4);
-			mmio_write32(ctx->in.reg_base, FIFO_DATA_REG,
-					ntohl(word));
+		i = 4 * write_words(ctx, buf8, num_words, &free_words);
+		if (!free_words) {
+			mmio_write32(ctx->csr.reg_base, FIFO_IENABLE_REG,
+					FIFO_IENABLE_AE);
+			return i;
 		}
 	}
 
@@ -406,4 +473,5 @@ fifo_write(const struct wrfifo_ctx *ctx, const void *buf, size_t len)
 	word = 0;
 	memcpy(&word, &buf8[i], num_tail);
 	mmio_write32(ctx->in.reg_base, FIFO_DATA_REG, ntohl(word));
+	return len;
 }
