@@ -48,13 +48,39 @@ rdfifo_ctx {
 	uint32_t buf[]; /* Incoming packet buffer */
 };
 
+enum
+wrfifo_mode {
+	FIFO_FREE_RUNNING, /* No backpressure, might overflow */
+	FIFO_INTR, /* An interrupt indicates available room */
+};
 /*
  * Context for FIFO write operation.
  */
 struct
 wrfifo_ctx {
-	struct fifo_mapped_reg in; /* "in" register */
-	struct fifo_mapped_reg csr; /* "in_csr" register (optional) */
+	/* "in" register */
+	struct fifo_mapped_reg in;
+
+	/* "in_csr" register (optional)
+	 *
+	 * csr.reg_base = NULL if the CSR register is unavailable.
+	 */
+	struct fifo_mapped_reg csr;
+
+	/* Operating mode */
+	enum wrfifo_mode mode;
+
+	/* FIFO depth in 32-bit words (optional)
+	 *
+	 * depth = -1 if unknown.
+	 */
+	ssize_t depth;
+
+	/* FD for /dev/uioX (optional)
+	 *
+	 * Available if mode = FIFO_INTR. Otherwise, uio_fd = -1.
+	 */
+	int uio_fd;
 };
 
 #define FIFO_GENERAL_ERROR  (-1) /* Catch-all error */

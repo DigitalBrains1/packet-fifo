@@ -195,7 +195,6 @@ close_rdfifo(struct rdfifo_ctx *ctx)
 int
 init_wrfifo(struct wrfifo_ctx **ctx, const struct uio_info_t *info)
 {
-	int fd;
 	char uio_dev_n[16];
 	int ret;
 	size_t i;
@@ -208,7 +207,7 @@ init_wrfifo(struct wrfifo_ctx **ctx, const struct uio_info_t *info)
 
 	ret=FIFO_DEV_ERROR;
 	sprintf(uio_dev_n, "/dev/uio%d", info->uio_num);
-	if ((fd=open(uio_dev_n, O_RDWR)) == -1)
+	if (((*ctx)->uio_fd=open(uio_dev_n, O_RDWR)) == -1)
 		goto init_wr_out_free_ctx;
 
 	for (i = 0; i < MAX_UIO_MAPS; i++)
@@ -232,7 +231,7 @@ init_wrfifo(struct wrfifo_ctx **ctx, const struct uio_info_t *info)
 		i = 0;
 	}
 	(*ctx)->in.map_base = mmap(NULL, info->maps[i].size,
-			(PROT_READ | PROT_WRITE), MAP_SHARED, fd,
+			(PROT_READ | PROT_WRITE), MAP_SHARED, (*ctx)->uio_fd,
 			i * getpagesize());
 	if ((*ctx)->in.map_base == MAP_FAILED)
 		goto init_wr_out_close;
@@ -245,24 +244,45 @@ init_wrfifo(struct wrfifo_ctx **ctx, const struct uio_info_t *info)
 			break;
 	if (i != MAX_UIO_MAPS) {
 		(*ctx)->csr.map_base = mmap(NULL, info->maps[i].size,
-				(PROT_READ | PROT_WRITE), MAP_SHARED, fd,
-				i * getpagesize());
+				(PROT_READ | PROT_WRITE), MAP_SHARED,
+				(*ctx)->uio_fd, i * getpagesize());
 		if ((*ctx)->csr.map_base == MAP_FAILED)
 			goto init_wr_out_mmap1;
 		(*ctx)->csr.size = info->maps[i].size;
 		(*ctx)->csr.reg_base = addr_offset((*ctx)->csr.map_base,
 				info->maps[i].offset);
+		/* INT32_MAX is unambiguously positive and large enough. */
+		mmio_write32((*ctx)->csr.reg_base, FIFO_ALMOSTEMPTY_REG,
+				INT32_MAX);
+		(*ctx)->depth = ((size_t) mmio_read32((*ctx)->csr.reg_base,
+					FIFO_ALMOSTEMPTY_REG)) + 1;
+		mmio_write32((*ctx)->csr.reg_base, FIFO_ALMOSTEMPTY_REG,
+				(*ctx)->depth / 2);
+
 	} else {
 		(*ctx)->csr.reg_base = NULL;
+		(*ctx)->depth = -1;
 	}
 
-	close(fd);
+	if (!strcmp(info->name, "altera_fifo_in_irq") &&
+			(*ctx)->csr.reg_base) {
+		(*ctx)->mode = FIFO_INTR;
+	} else if (!strcmp(info->name, "altera_fifo_no_irq")) {
+		(*ctx)->mode = FIFO_FREE_RUNNING;
+		close((*ctx)->uio_fd);
+		(*ctx)->uio_fd = -1;
+	} else {
+		goto init_wr_out_mmap2;
+	}
 
 	return 0;
+init_wr_out_mmap2:
+	if ((*ctx)->csr.reg_base)
+		munmap((*ctx)->csr.map_base, (*ctx)->csr.size);
 init_wr_out_mmap1:
 	munmap((*ctx)->in.map_base, (*ctx)->in.size);
 init_wr_out_close:
-	close(fd);
+	close((*ctx)->uio_fd);
 init_wr_out_free_ctx:
 	free(*ctx);
 init_wr_out_err:
@@ -275,6 +295,8 @@ close_wrfifo(struct wrfifo_ctx *ctx)
 	munmap(ctx->in.map_base, ctx->in.size);
 	if (ctx->csr.reg_base)
 		munmap(ctx->csr.map_base, ctx->csr.size);
+	if (ctx->uio_fd != -1)
+		close(ctx->uio_fd);
 	free(ctx);
 }
 

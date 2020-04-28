@@ -106,7 +106,7 @@ analyze_backpr(struct rdfifo_ctx *f2h_ctx, const struct wrfifo_ctx *h2f_ctx)
 		}
 		last_rdlevel = rdlevel;
 		last_wrlevel = wrlevel;
-		if (wrlevel == 8) {
+		if (wrlevel == (size_t) h2f_ctx->depth) {
 			sendpkt++;
 			break;
 		}
