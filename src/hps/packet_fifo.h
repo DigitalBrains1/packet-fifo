@@ -19,8 +19,8 @@
  */
 #ifndef FILE_PACKET_FIFO_H
 #define FILE_PACKET_FIFO_H
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 /*
  * All the information that needs to be kept to handle mmap()ed IO regions of

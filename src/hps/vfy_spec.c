@@ -1,12 +1,15 @@
+#include "vfy_spec.h"
+
+#include <arpa/inet.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
 #include <string.h>
 #include <sys/mman.h>
-#include "mmio.h"
+#include <unistd.h>
+
 #include "avalon_fifo.h"
+#include "mmio.h"
 #include "packet_fifo.h"
 
 static int

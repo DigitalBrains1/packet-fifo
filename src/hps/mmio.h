@@ -1,7 +1,7 @@
 #ifndef FILE_MMIO_H
 #define FILE_MMIO_H
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 static inline void *
 addr_offset(const void *base, size_t offset)

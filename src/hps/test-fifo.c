@@ -8,8 +8,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "mmio.h"
 #include "avalon_fifo.h"
+#include "mmio.h"
 #include "packet_fifo.h"
 #include "uio_helper.h"
 #include "vfy_spec.h"

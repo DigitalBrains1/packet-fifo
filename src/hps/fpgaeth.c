@@ -1,21 +1,20 @@
 #define _GNU_SOURCE 1
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <linux/if.h>
+#include <linux/if_tun.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <unistd.h>
 
-#include <linux/if.h>
-#include <linux/if_tun.h>
-
-#include "mmio.h"
 #include "avalon_fifo.h"
+#include "mmio.h"
 #include "packet_fifo.h"
 #include "uio_helper.h"
 

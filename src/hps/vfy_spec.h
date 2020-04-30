@@ -1,9 +1,10 @@
 #ifndef FILE_VFY_SPEC_H
 #define FILE_VFY_SPEC_H
+#include "packet_fifo.h"
 /*
  * Testcase: Interrupt on event level-sensitive
  */
-extern int
+int
 tc_evint_level(struct rdfifo_ctx *f2h_ctx,
 		const struct wrfifo_ctx *h2f_ctx);
 

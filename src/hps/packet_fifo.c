@@ -17,17 +17,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "packet_fifo.h"
+
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
 #include <string.h>
 #include <sys/mman.h>
-#include "mmio.h"
+#include <unistd.h>
+
 #include "avalon_fifo.h"
-#include "packet_fifo.h"
+#include "mmio.h"
 #include "uio_helper.h"
 
 static int
