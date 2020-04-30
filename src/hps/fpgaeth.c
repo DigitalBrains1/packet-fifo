@@ -19,6 +19,12 @@
 #include "packet_fifo.h"
 #include "uio_helper.h"
 
+struct partial_wr_ctx {
+	uint8_t buf[2048];
+	uint8_t *pos;
+	size_t len;
+};
+
 static int
 tun_alloc(char *dev)
 {
@@ -90,18 +96,31 @@ handle_f2h_packet(struct rdfifo_ctx *f2h_ctx, const int tunfd)
 }
 
 static int
-handle_tun_packet(const int tunfd, struct wrfifo_ctx *h2f_ctx)
+handle_tun_packet(const int tunfd, struct wrfifo_ctx *h2f_ctx,
+		struct partial_wr_ctx *par_ctx)
 {
-	uint8_t buf[2048];
-	ssize_t len;
+	ssize_t res;
+	int ret = 0;
 
-	len = read(tunfd, buf, sizeof(buf));
-	if (len > 0) {
-		fifo_write(h2f_ctx, buf, len);
-		return 1;
-	} else {
-		return 0;
+	if (!par_ctx->len) {
+		res = read(tunfd, par_ctx->buf, sizeof(par_ctx->buf));
+		if (res > 0) {
+			par_ctx->pos = par_ctx->buf;
+			par_ctx->len = res;
+			ret = 1;
+		} else {
+			return ret;
+		}
 	}
+
+	res = fifo_write(h2f_ctx, par_ctx->pos, par_ctx->len);
+	if (res < 0) {
+			printf("fifo_write() error\n");
+			exit(1);
+	}
+	par_ctx->pos += res;
+	par_ctx->len -= res;
+	return ret;
 }
 
 int
@@ -110,10 +129,12 @@ main(int argc, char *argv[])
 	char dev[IFNAMSIZ];
 	struct rdfifo_ctx *f2h_ctx;
 	struct wrfifo_ctx *h2f_ctx;
+	struct partial_wr_ctx par_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
-	int res, read_f2h, read_tun;
+	int res, read_f2h, read_tun, write_h2f;
 	fd_set fds;
-	int tunfd, fdmax;
+	int tunfd;
+	int fdmax = 0;
 	uint32_t tmp;
 
 	if (argc < 2) {
@@ -146,10 +167,14 @@ main(int argc, char *argv[])
 		fprintf(stderr, "init_rdfifo error %d\n", res);
 		return 1;
 	}
+	if (f2h_ctx->uio_fd > fdmax)
+		fdmax = f2h_ctx->uio_fd;
 	if ((res = init_wrfifo(&h2f_ctx, uio_h2f)) != 0) {
 		fprintf(stderr, "init_wrfifo error %d\n", res);
 		return 1;
 	}
+	if (h2f_ctx->uio_fd > fdmax)
+		fdmax = h2f_ctx->uio_fd;
 	uio_free_info(uio_list);
 
 	strncpy(dev, argv[1], IFNAMSIZ);
@@ -158,26 +183,41 @@ main(int argc, char *argv[])
 		printf("tun_alloc err");
 		exit(1);
 	}
+	if (tunfd > fdmax)
+		fdmax = tunfd;
 	printf("%s\n",dev);
 	//ioctl(fd1, TUNSETNOCSUM, 1);
 
-	fdmax = (tunfd > f2h_ctx->uio_fd ? tunfd : f2h_ctx->uio_fd) + 1;
-
+	fdmax++;
 	read_f2h = 1;
 	read_tun = 1;
+	write_h2f = 1;
+	par_ctx.len = 0;
 	while (1) {
 		if (read_f2h)
 			read_f2h = handle_f2h_packet(f2h_ctx, tunfd);
-		if (read_tun)
-			read_tun = handle_tun_packet(tunfd, h2f_ctx);
-		if (!read_f2h && !read_tun) {
+		if (read_tun || (par_ctx.len && write_h2f)) {
+			read_tun = handle_tun_packet(tunfd, h2f_ctx,
+					&par_ctx);
+			if (par_ctx.len)
+				write_h2f = 0;
+		}
+		if (!read_f2h && (!read_tun || !write_h2f)) {
 			FD_ZERO(&fds);
-			FD_SET(tunfd, &fds);
-			FD_SET(f2h_ctx->uio_fd, &fds);
+			if (!read_tun && write_h2f)
+				FD_SET(tunfd, &fds);
+			if (!read_f2h)
+				FD_SET(f2h_ctx->uio_fd, &fds);
+			if (!write_h2f)
+				FD_SET(h2f_ctx->uio_fd, &fds);
 			select(fdmax, &fds, NULL, NULL, NULL);
 			if (FD_ISSET(f2h_ctx->uio_fd, &fds)) {
 				read(f2h_ctx->uio_fd, &tmp, 4);
 				read_f2h = 1;
+			}
+			if (FD_ISSET(h2f_ctx->uio_fd, &fds)) {
+				read(h2f_ctx->uio_fd, &tmp, 4);
+				write_h2f = 1;
 			}
 			if (FD_ISSET(tunfd, &fds))
 				read_tun = 1;
