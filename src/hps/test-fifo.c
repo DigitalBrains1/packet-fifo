@@ -1,3 +1,45 @@
+/*
+ * Test and verify different aspects of how the Intel FIFOs work.
+ *
+ * In general, the FPGA should be programmed with
+ * src/clash/Test/Avalon/StreamEcho.hs;
+ * src/clash/Test/Avalon/PacketEcho/Plain.hs will also work.
+ *
+ * Not all tests run over the course of the development have been retained.
+ * Different older commits have other tests.
+ *
+ * (C) Copyright 2019,2020 QBayLogic B.V.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * ALTERNATIVELY, this product may be distributed under the terms of the GNU
+ * General Public License, either version 2 of the License, or (at your
+ * option) any later version, in which case the provisions of the GPL are
+ * required INSTEAD OF the above restrictions.  (This clause is necessary due
+ * to a potential bad interaction between the GPL and the restrictions
+ * contained in a BSD-style copyright.)
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -262,10 +304,11 @@ test_wrfifo(struct rdfifo_ctx *f2h_ctx, const struct wrfifo_ctx *h2f_ctx)
 int
 main()
 {
-	int res;
+	int res, wait_f2h;
 	struct rdfifo_ctx *f2h_ctx;
 	struct wrfifo_ctx *h2f_ctx;
 	struct uio_info_t *uio_list, *uio_f2h, *uio_h2f, *uio;
+	fd_set fds;
 
 	uio_list = uio_find_devices(-1);
 	if (!uio_list) {
@@ -297,6 +340,42 @@ main()
 		return 1;
 	}
 	uio_free_info(uio_list);
+
+	while(1) {
+		uint32_t num_elems, data, other;
+
+		num_elems = mmio_read32(f2h_ctx->csr.reg_base,
+				FIFO_LEVEL_REG);
+		//printf("%08x\n", num_elems);
+		for (; num_elems > 0; num_elems--) {
+			data = mmio_read32(f2h_ctx->out.reg_base,
+					FIFO_DATA_REG);
+			other = mmio_read32(f2h_ctx->out.reg_base,
+					FIFO_OTHER_INFO_REG);
+			printf("Data: %08x, Other: %08x\n", data, other);
+		}
+	}
+
+
+	wait_f2h = 0;
+	while (1) {
+		if (wait_f2h) {
+			FD_ZERO(&fds);
+			FD_SET(f2h_ctx->uio_fd, &fds);
+			select(f2h_ctx->uio_fd + 1, &fds, NULL, NULL, NULL);
+		}
+		res = fifo_read(f2h_ctx);
+		if (res == 0) {
+			printf("Got packet:\n");
+			hexdump(&f2h_ctx->buf, f2h_ctx->numbytes);
+			wait_f2h = 0;
+		} else if (res == FIFO_NEED_MORE) {
+			wait_f2h = 1;
+		} else {
+			printf("fifo_read err: %d\n", res);
+			exit(1);
+		}
+	}
 
 	tc_evint_level(f2h_ctx, h2f_ctx);
 	tc_race_int_en(f2h_ctx, h2f_ctx);
