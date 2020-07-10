@@ -4,6 +4,7 @@ import Clash.Prelude
 
 import qualified Data.Text.IO as TIO
 import Avalon.PacketWriter
+import Avalon.Packet
 import Avalon.Master
 import Test.Avalon.Master.MockSlave
 import Toolbox.Test
@@ -108,8 +109,8 @@ writeDummyCounter' cnt pInReady
         cnt' | cnt == maxCnt = cnt
              | pInReady      = cnt + 1
              | otherwise     = cnt
-        other | lsb cnt == 0 = fifoInfoSOP
-              | otherwise    = fifoInfoEOP
+        other | lsb cnt == 0 = bit fifoInfoSOP
+              | otherwise    = bit fifoInfoEOP
 
 mockTopEntity
     :: Signal System Bool

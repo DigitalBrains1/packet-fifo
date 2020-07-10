@@ -7,9 +7,6 @@ import Avalon.Master
 fifoDataReg = 0x0
 fifoOtherInfoReg = 0x4
 
-fifoInfoSOP = 1
-fifoInfoEOP = 2
-
 packetWriter
     :: HiddenClockResetEnable dom
     => ( Signal dom Bool
