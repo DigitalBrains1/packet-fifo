@@ -49,11 +49,10 @@ packetWriter pIn opReady = (pInReady, op)
         (opAddr, opData) = unbundle $ seq2op <$> sequence <*> dataReg
                                              <*> otherReg
 
-        sequence = moore seqT id (0 :: Index 3) (pInTransfer .||. opTransfer)
-
-        seqT s False                 = s
-        seqT s True  | s == maxBound = minBound
-                     | otherwise     = s+1
+        sequence :: Signal dom (Index 3)
+        sequence
+            = regEn 0 (pInTransfer .||. opTransfer)
+                (satSucc SatWrap <$> sequence)
 
         seq2op 0 d o = (undefined, undefined)
         seq2op 1 d o = (fifoOtherInfoReg, o)
