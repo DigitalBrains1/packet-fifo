@@ -56,7 +56,7 @@ byteStreamToPacket' (dataReg, sop, eop, empty, state) (sIn, pOutReady)
              | otherwise                 = eop
 
         empty' | state /= 7 && isJust sIn && not more = truncateB state
-                                                        :: Unsigned 3
+                                                        :: Unsigned 2
                | otherwise                            = empty
 
         state' | pOutReady && state == 7 = 3
