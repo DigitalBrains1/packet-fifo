@@ -68,17 +68,17 @@ traceFakeReply sendReply readData = (ramBusy', readAddr', sOut')
         sOut' = traceSignal1 "sOut" sOut
         sendReply' = traceSignal1 "sendReply" sendReply
 
-testEntity
-    :: KnownDomain dom
-    => Clock dom
-    -> Reset dom
-    -> Enable dom
-    -> Signal dom (Maybe (Bool, Unsigned 8))
-    -> Signal dom Bool
-    -> ( Signal dom Bool
-       , Signal dom (Maybe (Bool, Unsigned 8))
+topEntity
+    :: Clock System
+    -> Reset System
+    -> Enable System
+    -> Signal System (Maybe (Bool, Unsigned 8))
+    -> Signal System Bool
+    -> ( Signal System Bool
+       , Signal System (Maybe (Bool, Unsigned 8))
        )
-testEntity clk rst en sIn sOutReady = (sInReady, sOut)
+{-# NOINLINE topEntity #-}
+topEntity clk rst en sIn sOutReady = (sInReady, sOut)
     where
         (ramWrite, sInReady, sendReply)
             = withClockResetEnable clk rst en scanEcho sIn ramBusy
@@ -97,7 +97,7 @@ testBench = done
     where
         sIn = backPresStimuliGenerator clk rst (packetVecToStreamVec pktI)
             sInReady
-        (sInReady, sOut) = testEntity clk rst en sIn sOutReady'
+        (sInReady, sOut) = topEntity clk rst en sIn sOutReady'
         (sOutReady, sOut')
             = stallStream clk rst en
                 $(listToVecTH
