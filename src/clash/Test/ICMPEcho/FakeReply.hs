@@ -110,7 +110,7 @@ testBench = done
                 sOut
         sOutReady' = traceSignal1 "sOutReady" sOutReady
         expectedOutput
-            = maybeOutputVerifier' clk rst (packetVecToStreamVec pktO)
+            = maybeOutputVerifier' clk rst d300 (packetVecToStreamVec pktO)
         done = withClockResetEnable clk rst en $ expectedOutput sOut'
         clk = tbSystemClockGen (not <$> done)
         rst = systemResetGen

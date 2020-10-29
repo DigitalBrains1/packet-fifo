@@ -97,8 +97,10 @@ runTBs
     => [Signal dom Bool]
     -> IO ()
 runTBs tbs
-    = print $ P.head $ dropWhile id
-    $ P.map (P.head . dropWhile not . sample) tbs P.++ [False]
+    = if ( P.head $ dropWhile id
+         $ P.map (P.head . dropWhile not . sample) tbs P.++ [False])
+      then error "runTBs: impossible state"
+      else putStrLn "Testbenches have run."
 
 {-
  - Trace the elements of a two-tuple Signal individually
@@ -172,45 +174,78 @@ backPresStimuliGenerator clk rst stim ready
  -
  - Verified output is in the form of Maybe. Just values are compared to a list
  - of expected samples, Nothings are discarded.
+ -
+ - Because a simulation of a system that produces fewer than the expected
+ - number of samples would otherwise run forever, you can provide a `cutoff`
+ - indicating the maximum number of clock cycles to run. If no cutoff is
+ - desired, use 0.
  -}
 maybeOutputVerifier'
-    :: ( KnownDomain dom
-       , KnownNat n
+    :: forall l cLim a dom
+     . ( KnownDomain dom
+       , KnownNat l
+       , KnownNat cLim
        , Eq a
        , ShowX a
        )
     => Clock dom
     -> Reset dom
-    -> Vec n a
-    -> Signal dom (Maybe a)
-    -> Signal dom Bool
-maybeOutputVerifier' clk rst samples
-    = CEP.moore clk rst enableGen (movT samples) movO (0, False)
+    -> "cutoff" ::: SNat cLim
+    -> "samples" ::: Vec l a
+    -> "circuitOutput" ::: Signal dom (Maybe a)
+    -> "done" ::: Signal dom Bool
+maybeOutputVerifier' =
+    maybeOutputVerifier @l @cLim @a @dom @dom
+
+maybeOutputVerifier
+    :: forall l cLim a testDom circuitDom
+     . ( KnownDomain testDom
+       , KnownDomain circuitDom
+       , KnownNat l
+       , KnownNat cLim
+       , Eq a
+       , ShowX a
+       )
+    => Clock testDom
+    -> Reset testDom
+    -> "cutoff" ::: SNat cLim
+    -> "samples" ::: Vec l a
+    -> "circuitOutput" ::: Signal circuitDom (Maybe a)
+    -> "done" ::: Signal testDom Bool
+maybeOutputVerifier clk rst _ samples i0 =
+        -- Only assert while not finished
+        mux finish' finish' $ assertCLim
+        $ CEP.assert clk rst "outputVerifier" i1 expect finish'
     where
-        movT :: (KnownNat n, Eq a, ShowX a)
-             => Vec n a
-             -> (Index n, Bool)
+        circuitPer = snatToNum (clockPeriod @circuitDom)
+        testPer    = snatToNum (clockPeriod @testDom)
+        i1         = CEP.veryUnsafeSynchronizer circuitPer testPer i0
+        en         = toEnable (pure True)
+        finish'    = CEP.register clk rst en False finish
+        assertCLim
+            | natToNatural @cLim == 0 = id
+            | otherwise               =
+                  CEP.assert clk rst "outputVerifier exceeded cycle limit"
+                             cLimHit (pure False)
+        (cLimHit, expect, finish) = unbundle $ CEP.mealy clk rst en genT (0,0)
+                                                         i1
+
+        genT :: (Index cLim, Index l)
              -> Maybe a
-             -> (Index n, Bool)
-        movT _       s@(_  , True ) _              = s
-        movT _       s              Nothing        = s
-        movT samples   (cnt, False) (Just checked)
-            = if checked == expected then nextS
-                else trace (P.concat [ "\nElement "
-                                     , show cnt
-                                     , ", "
-                                     , "\nexpected value: "
-                                     , showX expected
-                                     , ", not equal to actual value: "
-                                     , showX checked
-                                     ]) nextS
+             -> ((Index cLim, Index l), (Bool, Maybe a, Bool))
+        genT (ccnt, scnt) i = ((ccnt', scnt'), (cLimHit, expect, finish))
             where
-                nextS | cnt == maxBound = (maxBound, True )
-                      | otherwise       = (cnt + 1 , False)
+                expect  = fmap (const $ samples !! scnt) i
+                scnt'   = maybe scnt (const $ succBound (SNat @l) scnt) i
+                cLimHit = not (natToNatural @cLim == 0) && ccnt == maxBound
+                ccnt'   = succBound (SNat @cLim) ccnt
+                finish  = scnt == maxBound || cLimHit
 
-                expected = samples !! cnt
-
-        movO (_, done) = done
+        succBound :: SNat n -> Index n -> Index n
+        succBound sn@SNat =
+            case compareSNat sn d0 of
+                SNatLE -> const undefined
+                SNatGT -> satSucc SatBound
 
 {-
  - Stall a dataflow-like stream of Maybe
