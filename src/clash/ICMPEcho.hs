@@ -399,7 +399,7 @@ responderStream' clk rst en sIn sOutReady = (sInReady, sOut)
         (ramWrite, sInReady, sendReply)
             = withClockResetEnable clk rst en scanEcho sIn ramBusy
         (ramBusy, readAddr, sOut)
-            = withClock clk $ withReset rst $ withEnable sOutEn
+            = withClockResetEnable clk rst sOutEn
               fakeReply sendReply readData'
 
         readData = CEP.asyncRamPow2 clk clk en readAddr' ramWrite
