@@ -290,13 +290,14 @@ show the usual freeing of resources when exiting. Simply call close_rdfifo()
 or close_wrfifo() when you are done with the FIFO to release all related
 resources.
 
-Interrupt-driven reading of FIFO's is done through the Linux kernel's
-Userspace I/O (UIO) subsystem.
+Interrupt-driven reading and writing of FIFO's is done through the Linux
+kernel's Userspace I/O (UIO) subsystem.
 
 Suspending execution and waiting for an interrupt is done by either a blocking
-read() on `rdfifo_ctx->uio_fd` or a select() on that fd. Note that
-`rdfifo_ctx` is the context that was created by init_rdfifo(). Reads from a
-UIO device *must* always be 4 bytes long. Examples:
+read() on `rdfifo_ctx->uio_fd` / `wrfifo_ctx->uio_fd` or a select() on that
+fd. Note that `rdfifo_ctx` is the context that was created by init_rdfifo(),
+and `wrfifo_ctx` the context created by init_wrfifo(). Reads from a UIO device
+*must* always be 4 bytes long. Examples:
 
 Blocking read():
 
@@ -323,14 +324,20 @@ far. In this application, it is not important and can be discarded. It does
 need to be read from the device file for every interrupt that is handled.
 
 Having covered /how/ to wait for an interrupt, it is critical to the correct
-operation to know /when/ to wait for an interrupt. As long as fifo_read() does
-not return the status code FIFO_NEED_MORE, do *not* read() or select()
-`ctx->uio_fd`! This includes the very first time the FIFO is read. *Only* when
-fifo_read() returns FIFO_NEED_MORE can the program be suspended by a blocking
-read() or select(). There is a chance that there is no new data in the FIFO on
-resumption, so this should not be assumed to be the case. Once resumed, keep
-calling fifo_read() until it once again returns FIFO_NEED_MORE and only then
-switch to read() or select() again.
+operation to know /when/ to wait for an interrupt. For FIFO reads, as long as
+fifo_read() does not return the status code FIFO_NEED_MORE, do *not* read() or
+select() `ctx->uio_fd`! This includes the very first time the FIFO is read.
+*Only* when fifo_read() returns FIFO_NEED_MORE can the program be suspended by
+a blocking read() or select(). There is a small chance that there is no new
+data in the FIFO on resumption, so this should not be assumed to be the case.
+Once resumed, keep calling fifo_read() until it once again returns
+FIFO_NEED_MORE and only then switch to read() or select() again.
+
+The process for waiting for an interrupt signaling available space in the
+fifo_write() case, the process is similar. Only when fifo_write() indicates a
+short write (fewer bytes written than requested by `len`) should the `uio_fd`
+be used to block. And there is a small chance there is still no write space
+available on resumption.
 
 The Linux kernel documentation has a UIO HOWTO which has more information on
 using the subsystem from userspace. It is included in the kernel source code;
