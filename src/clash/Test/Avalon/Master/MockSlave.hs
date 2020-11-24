@@ -42,9 +42,6 @@ import Toolbox.Test
  - determines how many clock cycles one request takes.
  -
  - All input signals are fully evaluated (reduced to normal form).
- -
- - TODO: Make it work for `cycles` == d0 (XXX: change `ack` so it's only
- -       active when an actual request is issued)
  -}
 mockAvalonSlave
     :: forall dom d k .
@@ -66,9 +63,9 @@ mockAvalonSlave
 
 mockAvalonSlave _ (addr, wdata, read, write, be)
     = ( pure 0x12345672
-      , addr `seqXA` wdata `seqXA` read `seqXA` write `seqXA` be `seqXA` ack)
+      , addr `seqXA` wdata `seqXA` be `seqXA` ack)
     where
-        ack = (== 0) <$> cnt
+        ack = ((== 0) <$> cnt) .&&. (read .||. write)
 
         cnt :: Signal dom (Index d)
         cnt = regEn maxBound (read .||. write) $ satPred SatWrap <$> cnt
