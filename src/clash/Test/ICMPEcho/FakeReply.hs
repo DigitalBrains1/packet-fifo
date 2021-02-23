@@ -1,5 +1,19 @@
 {-
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - This testbench verifies that an ICMP Echo Request packet is correctly
+ - transformed into an ICMP Echo Reply packet by ICMPEcho.fakeReply.
+ -
+ - It uses ICMPEcho.scanEcho; it is assumed it works correctly.
+ -
+ - An ICMP Echo Request packet from Test.ICMPEcho.TestPackets is streamed in,
+ - and it is verified that the Reply packet from the same module is what is
+ - streamed out. The output stream is stalled deliberately to verify such a
+ - stall does not corrupt data. Different combinations of durations of
+ - stalling/streaming are used.
+ -
+ - Alternatively, instead of the testbench, the behavior can be observed in a
+ - VCD file.
+ -
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -38,20 +52,28 @@ import ICMPEcho
 import Test.ICMPEcho.TestPackets
 import Toolbox.Test
 
+{-
+ - Functionally equivalent to ICMPEcho.fakeReply, but the state of that Mealy
+ - machine is traced. Furthermore, all inputs and outputs are traced.
+ -}
 traceFakeReply
     :: HiddenClockResetEnable dom
-    => Signal dom (Maybe (Unsigned 11))
+    => "sendReply" ::: Signal dom (Maybe ("pktLen" ::: Unsigned 11))
        -- ^ Send reply
-    -> Signal dom (Unsigned 8)
+    -> "readData" ::: Signal dom (Unsigned 8)
        -- ^ RAM read data
-    -> ( Signal dom Bool
+    -> ( "ramBusy" ::: Signal dom Bool
          -- ^ RAM busy
-       , Signal dom (Unsigned 11)
+       , "readAddr" ::: Signal dom (Unsigned 11)
          -- ^ RAM read address
-       , Signal dom (Maybe (Bool, Unsigned 8))
+       , "sOut" :::
+             Signal dom
+                 (Maybe ( "more" ::: Bool
+                        , "data" ::: Unsigned 8
+                        )
+                 )
          -- ^ Stream-out
        )
-
 traceFakeReply sendReply readData = (ramBusy', readAddr', sOut')
     where
         (s', o) =   extractState fakeReply' fakeReplyIS s''
@@ -72,10 +94,22 @@ topEntity
     :: Clock System
     -> Reset System
     -> Enable System
-    -> Signal System (Maybe (Bool, Unsigned 8))
-    -> Signal System Bool
-    -> ( Signal System Bool
-       , Signal System (Maybe (Bool, Unsigned 8))
+    -> "sIn" :::
+           Signal System
+               ( Maybe ( "more" ::: Bool
+                       , "data" ::: Unsigned 8
+                       )
+               )
+       -- ^ Stream-in
+    -> "sOutReady" ::: Signal System Bool
+         -- ^ Stream-out ready
+    -> ( "sInReady" ::: Signal System Bool
+         -- ^ Stream-in ready
+       , Signal System
+             (Maybe ( "more" ::: Bool
+                    , "data" ::: Unsigned 8
+                    )
+             )
        )
 {-# NOINLINE topEntity #-}
 topEntity clk rst en sIn sOutReady = (sInReady, sOut)
@@ -118,9 +152,15 @@ testBench = done
         pktI = $(listToVecTH echoReqPacket)
         pktO = $(listToVecTH echoReplPacket)
 
+packetVecToStreamVec
+    :: Vec (n+1) (Unsigned 8)
+    -> Vec (n+1) ( "more" ::: Bool
+                 , "data" ::: Unsigned 8
+                 )
 packetVecToStreamVec pkt =    map (\e -> (True, e)) (init pkt)
                            :< (False, last pkt)
 
+makeVCD :: IO ()
 makeVCD
     = writeVCD' "fakereply.vcd"
         testBench

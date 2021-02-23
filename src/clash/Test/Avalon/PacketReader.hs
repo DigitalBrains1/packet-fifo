@@ -9,7 +9,7 @@
  - `packetReader` should work correctly with a combinatorial (zero-delay)
  - Avalon slave.
  -
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -80,6 +80,7 @@ mockTopEntity'
         pOutData' = traceSignal1 "pOutData" pOutData
         pOutOther' = traceSignal1 "pOutOther" pOutOther
 
+makeVCD :: IO ()
 makeVCD
     = writeVCD' "avpr.vcd"
         mockTopEntity
@@ -95,4 +96,5 @@ makeVCD
         , "pOutOther"
         ]
 
+main :: IO ()
 main = makeVCD

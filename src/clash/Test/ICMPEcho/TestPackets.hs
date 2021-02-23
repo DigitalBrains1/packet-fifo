@@ -1,5 +1,7 @@
 {-
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - IP packets (inside Ethernet frames) for testing ICMPEcho.
+ -
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -28,6 +30,11 @@ module Test.ICMPEcho.TestPackets where
 
 import Clash.Prelude
 
+{-
+ - An ICMP Echo Request packet
+ -
+ - It was captured in the wild, from an Ethernet interface.
+ -}
 echoReqPacket :: [Unsigned 8]
 echoReqPacket
     = [ 0x52, 0x54, 0x00, 0xeb, 0x9b, 0xd0, 0x00, 0x50, 0xb6, 0x78, 0x57
@@ -40,6 +47,12 @@ echoReqPacket
       , 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d
       , 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37 ]
 
+{-
+ - An ICMP Echo Reply packet
+ -
+ - It is the expected transformation as performed by ICMPEcho.fakeReply on
+ - 'echoReqPacket' above.
+ -}
 echoReplPacket :: [Unsigned 8]
 echoReplPacket
     = [ 0x00, 0x50, 0xb6, 0x78, 0x57, 0xbe, 0x52, 0x54, 0x00, 0xeb, 0x9b
@@ -52,6 +65,15 @@ echoReplPacket
       , 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d
       , 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37 ]
 
+{-
+ - A TCP SYN packet
+ -
+ - It was captured in the wild from an Ethernet interface, directed at the IP
+ - host "implemented" in the FPGA in 'ICMPEcho'.
+ -
+ - The precise packet doesn't matter, what matters is it is a packet directed
+ - at the FPGA that is not an ICMP Echo Request.
+ -}
 tcpSynPacket :: [Unsigned 8]
 tcpSynPacket
     = [ 0x52, 0x54, 0x00, 0xeb, 0x9b, 0xd0, 0x00, 0x50, 0xb6, 0x78, 0x57

@@ -1,5 +1,13 @@
 {-
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - This design will echo packets back to the HPS, but will mask out anything but
+ - the first 8-bit symbol in every 32-bit beat. This is useful to verify
+ - endianness is correctly handled. Only the first, the fifth, the ninth,
+ - etcetera byte of the returned packet matches the sent packet, the others are
+ - always zero.
+ -
+ - Also see Test.Avalon.PacketEcho.Common .
+ -
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -51,6 +59,49 @@ import Test.Avalon.PacketEcho.Common
                 ]
         }) #-}
 {-# NOINLINE avalonPacketEcho #-}
+avalonPacketEcho
+    :: Clock System
+    -> "rst_n" ::: Signal System Bool
+    -- ^ Active-low asynchronous reset
+    -> "fpga_debounced_buttons" ::: Signal System (BitVector 3)
+    -> "fifo_f2h_in" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_f2h_in_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_f2h_in_mm_external_interface_acknowledge
+           )
+    -> "fifo_f2h_out" :::
+           ( Signal System (Unsigned 32)
+           -- ^ fifo_h2f_out_mm_external_interface_read_data
+           , Signal System Bool
+           -- ^ fifo_h2f_out_mm_external_interface_acknowledge
+           )
+    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
+       , "fifo_f2h_in" :::
+             ( Signal System (Unsigned 3)
+             -- ^ fifo_f2h_in_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_f2h_in_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_f2h_in_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_f2h_in_mm_external_interface_byte_enable
+             )
+       , "fifo_f2h_out" :::
+             ( Signal System (Unsigned 6)
+             -- ^ fifo_h2f_out_mm_external_interface_address
+             , Signal System (Unsigned 32)
+             -- ^ fifo_h2f_out_mm_external_interface_write_data
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_read
+             , Signal System Bool
+             -- ^ fifo_h2f_out_mm_external_interface_write
+             , Signal System (BitVector 4)
+             -- ^ fifo_h2f_out_mm_external_interface_byte_enable
+             )
+       )
 avalonPacketEcho clk rst_n
     = withClockResetEnable clk rstS enableGen
                            avalonPacketEchoXfm (.&. 0xff000000)

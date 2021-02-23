@@ -1,5 +1,5 @@
 {-
- - Copyright (c) 2019,2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,12 @@ import Type.Reflection (Typeable)
 
 {-
  - Mealy machine that outputs its state as a Signal
+ -
+ - The feedback for the state is passed outside. This way, the caller can put
+ - a trace on the state, e.g.:
+ -
+ - (s', o) = extractState tf is s'' i
+ - s'' = traceSignal1 "s" s'
  -}
 extractState
     :: ( HiddenClockResetEnable dom

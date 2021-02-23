@@ -11,7 +11,7 @@
  - Note that a GTKWave save file `avp2bs.gtkw` is included for setting up the
  - wave display.
  -
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -77,6 +77,7 @@ mockTopEntity'
         h2fIn
             = mockAvalonSlave d3 h2fOut
 
+makeVCD :: IO ()
 makeVCD
     = writeVCD' "avp2bs.vcd"
         mockTopEntity
@@ -85,4 +86,5 @@ makeVCD
         , "packetOther"
         ]
 
+main :: IO ()
 main = makeVCD

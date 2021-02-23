@@ -10,7 +10,7 @@
  - Note that a GTKWave save file `avbs2p.gtkw` is included for setting up the
  - wave display.
  -
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -90,6 +90,7 @@ mockTopEntity' = bundle packet
 
         stream' = streamGen streamReady
 
+makeVCD :: IO ()
 makeVCD
     = writeVCD' "avbs2p.vcd"
         mockTopEntity
@@ -101,4 +102,5 @@ makeVCD
         , "sData"
         ]
 
+main :: IO ()
 main = makeVCD

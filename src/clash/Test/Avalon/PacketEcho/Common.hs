@@ -3,12 +3,12 @@
  -
  - An optional transformation enables experimenting with the layout of data.
  - Actual top entities are defined in different files for specific
- - transformations.h
+ - transformations.
  -
  - Packets pass through avalonMaster, packetReader and packetWriter, verifying
  - their basic functioning.
  -
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
