@@ -14,7 +14,7 @@
  -
  - Alternatively, the behavior of avalonMaster can be observed in a VCD file.
  -
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -48,114 +48,14 @@ import Avalon.Master
 import Test.Avalon.Master.MockSlave
 import Toolbox.Misc
 import Toolbox.Test
+import Test.Avalon.Common
 
-{-# ANN avalonMasterWriter
-    (Synthesize
-        { t_name   = "packet_fifo"
-        , t_inputs
-            = [ PortName "clk"
-              , PortName "rst_n"
-              , PortName "fpga_debounced_buttons"
-              , avalonMasterExtInputNames "fifo_f2h_in_mm_"
-              , avalonMasterExtInputNames "fifo_h2f_out_mm_"
-              ]
-        , t_output
-            = PortProduct ""
-                [ PortName "fpga_led_internal"
-                , avalonMasterExtOutputNames "fifo_f2h_in_mm_"
-                , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
-                ]
-        }) #-}
-avalonMasterWriter
-    :: Clock System
-    -> "rst_n" ::: Signal System Bool
-    -- ^ Active-low asynchronous reset
-    -> "fpga_debounced_buttons" ::: Signal System (BitVector 3)
-    -> "fifo_f2h_in" :::
-           ( Signal System (Unsigned 32)
-           -- ^ fifo_f2h_in_mm_external_interface_read_data
-           , Signal System Bool
-           -- ^ fifo_f2h_in_mm_external_interface_acknowledge
-           )
-    -> "fifo_f2h_out" :::
-           ( Signal System (Unsigned 32)
-           -- ^ fifo_h2f_out_mm_external_interface_read_data
-           , Signal System Bool
-           -- ^ fifo_h2f_out_mm_external_interface_acknowledge
-           )
-    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
-       , "fifo_f2h_in" :::
-             ( Signal System (Unsigned 3)
-             -- ^ fifo_f2h_in_mm_external_interface_address
-             , Signal System (Unsigned 32)
-             -- ^ fifo_f2h_in_mm_external_interface_write_data
-             , Signal System Bool
-             -- ^ fifo_f2h_in_mm_external_interface_read
-             , Signal System Bool
-             -- ^ fifo_f2h_in_mm_external_interface_write
-             , Signal System (BitVector 4)
-             -- ^ fifo_f2h_in_mm_external_interface_byte_enable
-             )
-       , "fifo_f2h_out" :::
-             ( Signal System (Unsigned 6)
-             -- ^ fifo_h2f_out_mm_external_interface_address
-             , Signal System (Unsigned 32)
-             -- ^ fifo_h2f_out_mm_external_interface_write_data
-             , Signal System Bool
-             -- ^ fifo_h2f_out_mm_external_interface_read
-             , Signal System Bool
-             -- ^ fifo_h2f_out_mm_external_interface_write
-             , Signal System (BitVector 4)
-             -- ^ fifo_h2f_out_mm_external_interface_byte_enable
-             )
-       )
-avalonMasterWriter clk rst_n
-    = exposeClockResetEnable avalonMasterWriter' clk rstS enableGen
-    where
-        rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen
+avalonMasterWriter :: PacketFifoTopEntity
+avalonMasterWriter = packetFifoTopEntity avalonMasterWriter'
+{-# ANN avalonMasterWriter packetFifoSynthesize #-}
 {-# NOINLINE avalonMasterWriter #-}
 
-avalonMasterWriter'
-    :: SystemClockResetEnable
-    => "fpga_debounced_buttons" ::: Signal System (BitVector 3)
-    -> "fifo_f2h_in" :::
-           ( Signal System (Unsigned 32)
-           -- ^ fifo_f2h_in_mm_external_interface_read_data
-           , Signal System Bool
-           -- ^ fifo_f2h_in_mm_external_interface_acknowledge
-           )
-    -> "fifo_f2h_out" :::
-           ( Signal System (Unsigned 32)
-           -- ^ fifo_h2f_out_mm_external_interface_read_data
-           , Signal System Bool
-           -- ^ fifo_h2f_out_mm_external_interface_acknowledge
-           )
-    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
-       , "fifo_f2h_in" :::
-             ( Signal System (Unsigned 3)
-             -- ^ fifo_f2h_in_mm_external_interface_address
-             , Signal System (Unsigned 32)
-             -- ^ fifo_f2h_in_mm_external_interface_write_data
-             , Signal System Bool
-             -- ^ fifo_f2h_in_mm_external_interface_read
-             , Signal System Bool
-             -- ^ fifo_f2h_in_mm_external_interface_write
-             , Signal System (BitVector 4)
-             -- ^ fifo_f2h_in_mm_external_interface_byte_enable
-             )
-       , "fifo_f2h_out" :::
-             ( Signal System (Unsigned 6)
-             -- ^ fifo_h2f_out_mm_external_interface_address
-             , Signal System (Unsigned 32)
-             -- ^ fifo_h2f_out_mm_external_interface_write_data
-             , Signal System Bool
-             -- ^ fifo_h2f_out_mm_external_interface_read
-             , Signal System Bool
-             -- ^ fifo_h2f_out_mm_external_interface_write
-             , Signal System (BitVector 4)
-             -- ^ fifo_h2f_out_mm_external_interface_byte_enable
-             )
-       )
+avalonMasterWriter' :: PacketFifoTopEntityImpl
 avalonMasterWriter' _ f2hIn h2fIn
     = (pure 0, f2hOut , h2fOut)
     where
@@ -175,18 +75,7 @@ avalonMasterWriter' _ f2hIn h2fIn
 writeDummyCounter
     :: HiddenClockResetEnable dom
     => "opReady" ::: Signal dom Bool
-    -> "op" :::
-        ( "opValid" ::: Signal dom Bool
-        -- ^ Operation valid
-        , "opCmd" ::: Signal dom AvalonCmd
-        -- ^ Read or write
-        , "opTag" ::: Signal dom ()
-        -- ^ Passthrough tag for request matching
-        , "opAddr" ::: Signal dom (Unsigned 3)
-        -- ^ Address
-        , "opData" ::: Signal dom (Unsigned 32)
-        -- ^ Write data
-        )
+    -> "op" ::: AvalonMasterOp dom () 3 32
 writeDummyCounter opReady
     = mealyB writeDummyCounter' 0 opReady
 

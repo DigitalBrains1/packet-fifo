@@ -1,5 +1,5 @@
 {-
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,48 @@ import Clash.Prelude
 import qualified Prelude as P
 
 import Toolbox.Fifo
+
+type AvalonMasterOp dom tag m n =
+    ( "opValid" ::: Signal dom Bool
+    -- ^ Operation valid
+    , "opCmd" ::: Signal dom AvalonCmd
+    -- ^ Read or write
+    , "opTag" ::: Signal dom tag
+    -- ^ Passthrough tag for request matching
+    , "opAddr" ::: Signal dom (Unsigned m)
+    -- ^ Address
+    , "opData" ::: Signal dom (Unsigned n)
+    -- ^ Write data
+    )
+
+type AvalonMasterRes dom tag n =
+    ( "resValid" ::: Signal dom Bool
+    -- ^ Result valid
+    , "resTag" ::: Signal dom tag
+    -- ^ Passthrough tag
+    , "resData" ::: Signal dom (Unsigned n)
+    -- ^ Read data
+    )
+
+type AvalonMasterExtInput dom n =
+    (  "external_interface_read_data" ::: Signal dom (Unsigned n)
+    -- ^ Avalon read data
+    , "external_interface_acknowledge" ::: Signal dom Bool
+    -- ^ Avalon acknowledge
+    )
+
+type AvalonMasterExtOutput dom m n =
+    ( "external_interface_address" ::: Signal dom (Unsigned m)
+    -- ^ Address
+    , "external_interface_write_data" ::: Signal dom (Unsigned n)
+    -- ^ Write data
+    , "external_interface_read" ::: Signal dom Bool
+    -- ^ Read strobe
+    , "external_interface_write" ::: Signal dom Bool
+    -- ^ Write strobe
+    , "external_interface_byte_enable" ::: Signal dom (BitVector 4)
+    -- ^ Byte enable (all bytes always enabled here)
+    )
 
 {-
  - Generate proper port naming for Synthesize t_inputs annotation on top
@@ -88,51 +130,17 @@ avalonMaster
        , KnownNat m
        , KnownNat n
        , NFDataX tag)
-    => "avIn" :::
-        (  "external_interface_read_data" ::: Signal dom (Unsigned n)
-        -- ^ Avalon read data
-        , "external_interface_acknowledge" ::: Signal dom Bool
-        -- ^ Avalon acknowledge
-        )
+    => "avIn" ::: AvalonMasterExtInput dom n
     -- ^ External bus signals
-    -> "op" :::
-        ( "opValid" ::: Signal dom Bool
-        -- ^ Operation valid
-        , "opCmd" ::: Signal dom AvalonCmd
-        -- ^ Read or write
-        , "opTag" ::: Signal dom tag
-        -- ^ Passthrough tag for request matching
-        , "opAddr" ::: Signal dom (Unsigned m)
-        -- ^ Address
-        , "opData" ::: Signal dom (Unsigned n)
-        -- ^ Write data
-        )
+    -> "op" ::: AvalonMasterOp dom tag m n
     -- ^ Interface for use of this component: operation request
     -> "resReady" ::: Signal dom Bool
     -- ^ Result ready
-    -> ( "avOut" :::
-           ( "external_interface_address" ::: Signal dom (Unsigned m)
-           -- ^ Address
-           , "external_interface_write_data" ::: Signal dom (Unsigned n)
-           -- ^ Write data
-           , "external_interface_read" ::: Signal dom Bool
-           -- ^ Read strobe
-           , "external_interface_write" ::: Signal dom Bool
-           -- ^ Write strobe
-           , "external_interface_byte_enable" ::: Signal dom (BitVector 4)
-           -- ^ Byte enable (all bytes always enabled here)
-           )
+    -> ( "avOut" ::: AvalonMasterExtOutput dom m n
        -- ^ External bus signals
        , "opReady" ::: Signal dom Bool
        -- ^ Operation ready
-       , "res" :::
-           ( "resValid" ::: Signal dom Bool
-           -- ^ Result valid
-           , "resTag" ::: Signal dom tag
-           -- ^ Passthrough tag
-           , "resData" ::: Signal dom (Unsigned n)
-           -- ^ Read data
-           )
+       , "res" ::: AvalonMasterRes dom tag n
        -- ^ Interface for use of this component: result of operation
        )
 avalonMaster = avalonMaster' (fifoP2 d1)
@@ -159,54 +167,19 @@ avalonMaster'
        , NFDataX tag)
     => "inpFifo" ::: Fifo dom (AvalonCmd, tag, Unsigned m, Unsigned n)
        -- ^ The fifo that buffers the input
-    -> "avIn" :::
-        (  "external_interface_read_data" ::: Signal dom (Unsigned n)
-        -- ^ Avalon read data
-        , "external_interface_acknowledge" ::: Signal dom Bool
-        -- ^ Avalon acknowledge
-        )
+    -> "avIn" ::: AvalonMasterExtInput dom n
     -- ^ External bus signals
-    -> "op" :::
-        ( "opValid" ::: Signal dom Bool
-        -- ^ Operation valid
-        , "opCmd" ::: Signal dom AvalonCmd
-        -- ^ Read or write
-        , "opTag" ::: Signal dom tag
-        -- ^ Passthrough tag for request matching
-        , "opAddr" ::: Signal dom (Unsigned m)
-        -- ^ Address
-        , "opData" ::: Signal dom (Unsigned n)
-        -- ^ Write data
-        )
+    -> "op" ::: AvalonMasterOp dom tag m n
     -- ^ Interface for use of this component: operation request
     -> "resReady" ::: Signal dom Bool
     -- ^ Result ready
-    -> ( "avOut" :::
-           ( "external_interface_address" ::: Signal dom (Unsigned m)
-           -- ^ Avalon address
-           , "external_interface_write_data" ::: Signal dom (Unsigned n)
-           -- ^ Avalon write data
-           , "external_interface_read" ::: Signal dom Bool
-           -- ^ Avalon read strobe
-           , "external_interface_write" ::: Signal dom Bool
-           -- ^ Avalon write strobe
-           , "external_interface_byte_enable" ::: Signal dom (BitVector 4)
-           -- ^ Avalon byte enable (all bytes always enabled here)
-           )
+    -> ( "avOut" ::: AvalonMasterExtOutput dom m n
        -- ^ External bus signals
        , "opReady" ::: Signal dom Bool
        -- ^ Operation ready
-       , "res" :::
-           ( "resValid" ::: Signal dom Bool
-           -- ^ Result valid
-           , "resTag" ::: Signal dom tag
-           -- ^ Passthrough tag
-           , "resData" ::: Signal dom (Unsigned n)
-           -- ^ Read data
-           )
+       , "res" ::: AvalonMasterRes dom tag n
        -- ^ Interface for use of this component: result of operation
        )
-
 avalonMaster' inpFifo avIn op resReady
     = (avOut, opReady, res)
     where

@@ -1,5 +1,5 @@
 {-
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,20 @@ data AvalonTag = DataTag | OtherTag | FillTag
     deriving (Eq, Generic, NFDataX)
 
 {-
+ - The AvalonMasterOp for an Intel FPGA Avalon FIFO Memory Core as input.
+ -}
+type PacketReaderOp dom = AvalonMasterOp dom AvalonTag 6 32
+
+{-
+ - The AvalonMasterRes for an Intel FPGA Avalon FIFO Memory Core as input.
+ -}
+type PacketReaderRes dom = AvalonMasterRes dom AvalonTag 32
+
+type PacketReaderExtInput dom = AvalonMasterExtInput dom 32
+
+type PacketReaderExtOutput dom = AvalonMasterExtOutput dom 6 32
+
+{-
  - Read packets from an Intel FPGA Avalon FIFO Memory Core.
  -
  - Any packets put into the FIFO are output on the `pOut` output, in the same
@@ -65,14 +79,8 @@ data AvalonTag = DataTag | OtherTag | FillTag
  -}
 packetReader
     :: HiddenClockResetEnable dom
-    => "res" :::
-           ( "resValid" ::: Signal dom Bool
-           -- ^ Avalon result valid
-           , "resTag" ::: Signal dom AvalonTag
-           -- ^ Avalon result tag
-           , "resData" ::: Signal dom (Unsigned 32)
-           -- ^ Avalon result data
-           )
+    => "res" ::: PacketReaderRes dom
+       -- ^ Avalon result
     -> "pOutReady" ::: Signal dom Bool
        -- ^ Packet out ready
     -> "opReady" ::: Signal dom Bool
@@ -87,18 +95,8 @@ packetReader
              , "pOutOther" ::: Signal dom (Unsigned 32)
              -- ^ Packet out other info
              )
-       , "op" :::
-           ( "opValid" ::: Signal dom Bool
-           -- ^ Avalon op valid
-           , "opCmd" ::: Signal dom AvalonCmd
-           -- ^ Avalon op command
-           , "opTag" ::: Signal dom AvalonTag
-           -- ^ Avalon op tag
-           , "opAddr" ::: Signal dom (Unsigned 6)
-           -- ^ Avalon op address
-           , "opData" ::: Signal dom (Unsigned 32)
-           -- ^ Avalon op data
-           )
+       , "op" ::: PacketReaderOp dom
+       -- ^ Avalon operation
        )
 
 packetReader res pOutReady opReady

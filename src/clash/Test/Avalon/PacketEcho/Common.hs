@@ -44,44 +44,13 @@ import Avalon.PacketWriter
 avalonPacketEchoXfm
     :: SystemClockResetEnable
     => (Unsigned 32 -> Unsigned 32)
-    -> Signal System (BitVector 3)
-    -- ^ fpga_debounced_buttons
-    -> ( Signal System (Unsigned 32)
-       -- ^ fifo_f2h_in_mm_external_interface_read_data
-       , Signal System Bool
-       -- ^ fifo_f2h_in_mm_external_interface_acknowledge
+    -> "fpga_debounced_buttons" ::: Signal System (BitVector 3)
+    -> "fifo_f2h_in" ::: PacketWriterExtInput System
+    -> "fifo_h2f_out" ::: PacketReaderExtInput System
+    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
+       , "fifo_f2h_in" ::: PacketWriterExtOutput System
+       , "fifo_h2f_out" ::: PacketReaderExtOutput System
        )
-    -> ( Signal System (Unsigned 32)
-       -- ^ fifo_h2f_out_mm_external_interface_read_data
-       , Signal System Bool
-       -- ^ fifo_h2f_out_mm_external_interface_acknowledge
-       )
-    -> ( Signal System (Unsigned 10)
-       -- ^ fpga_led_internal
-       , ( Signal System (Unsigned 3)
-         -- ^ fifo_f2h_in_mm_external_interface_address
-         , Signal System (Unsigned 32)
-         -- ^ fifo_f2h_in_mm_external_interface_write_data
-         , Signal System Bool
-         -- ^ fifo_f2h_in_mm_external_interface_read
-         , Signal System Bool
-         -- ^ fifo_f2h_in_mm_external_interface_write
-         , Signal System (BitVector 4)
-         -- ^ fifo_f2h_in_mm_external_interface_byte_enable
-         )
-       , ( Signal System (Unsigned 6)
-         -- ^ fifo_h2f_out_mm_external_interface_address
-         , Signal System (Unsigned 32)
-         -- ^ fifo_h2f_out_mm_external_interface_write_data
-         , Signal System Bool
-         -- ^ fifo_h2f_out_mm_external_interface_read
-         , Signal System Bool
-         -- ^ fifo_h2f_out_mm_external_interface_write
-         , Signal System (BitVector 4)
-         -- ^ fifo_h2f_out_mm_external_interface_byte_enable
-         )
-       )
-
 avalonPacketEchoXfm xfm _ f2hIn h2fIn
     = (pure 0, f2hOut, h2fOut)
     where

@@ -33,74 +33,10 @@ module Test.Avalon.PacketEcho.Plain where
 
 import Clash.Prelude
 
-import Avalon.Master
-import Avalon.PacketReader
-import Avalon.PacketWriter
+import Test.Avalon.Common
 import Test.Avalon.PacketEcho.Common
 
-{-# ANN avalonPacketEcho
-    (Synthesize
-        { t_name   = "packet_fifo"
-        , t_inputs
-            = [ PortName "clk"
-              , PortName "rst_n"
-              , PortName "fpga_debounced_buttons"
-              , avalonMasterExtInputNames "fifo_f2h_in_mm_"
-              , avalonMasterExtInputNames "fifo_h2f_out_mm_"
-              ]
-        , t_output
-            = PortProduct ""
-                [ PortName "fpga_led_internal"
-                , avalonMasterExtOutputNames "fifo_f2h_in_mm_"
-                , avalonMasterExtOutputNames "fifo_h2f_out_mm_"
-                ]
-        }) #-}
+avalonPacketEcho :: PacketFifoTopEntity
+avalonPacketEcho = packetFifoTopEntity $ avalonPacketEchoXfm id
+{-# ANN avalonPacketEcho packetFifoSynthesize #-}
 {-# NOINLINE avalonPacketEcho #-}
-avalonPacketEcho
-    :: Clock System
-    -> "rst_n" ::: Signal System Bool
-    -- ^ Active-low asynchronous reset
-    -> "fpga_debounced_buttons" ::: Signal System (BitVector 3)
-    -> "fifo_f2h_in" :::
-           ( Signal System (Unsigned 32)
-           -- ^ fifo_f2h_in_mm_external_interface_read_data
-           , Signal System Bool
-           -- ^ fifo_f2h_in_mm_external_interface_acknowledge
-           )
-    -> "fifo_f2h_out" :::
-           ( Signal System (Unsigned 32)
-           -- ^ fifo_h2f_out_mm_external_interface_read_data
-           , Signal System Bool
-           -- ^ fifo_h2f_out_mm_external_interface_acknowledge
-           )
-    -> ( "fpga_led_internal" ::: Signal System (Unsigned 10)
-       , "fifo_f2h_in" :::
-             ( Signal System (Unsigned 3)
-             -- ^ fifo_f2h_in_mm_external_interface_address
-             , Signal System (Unsigned 32)
-             -- ^ fifo_f2h_in_mm_external_interface_write_data
-             , Signal System Bool
-             -- ^ fifo_f2h_in_mm_external_interface_read
-             , Signal System Bool
-             -- ^ fifo_f2h_in_mm_external_interface_write
-             , Signal System (BitVector 4)
-             -- ^ fifo_f2h_in_mm_external_interface_byte_enable
-             )
-       , "fifo_f2h_out" :::
-             ( Signal System (Unsigned 6)
-             -- ^ fifo_h2f_out_mm_external_interface_address
-             , Signal System (Unsigned 32)
-             -- ^ fifo_h2f_out_mm_external_interface_write_data
-             , Signal System Bool
-             -- ^ fifo_h2f_out_mm_external_interface_read
-             , Signal System Bool
-             -- ^ fifo_h2f_out_mm_external_interface_write
-             , Signal System (BitVector 4)
-             -- ^ fifo_h2f_out_mm_external_interface_byte_enable
-             )
-       )
-avalonPacketEcho clk rst_n
-    = withClockResetEnable clk rstS enableGen
-                           avalonPacketEchoXfm id
-    where
-        rstS = resetSynchronizer clk (unsafeFromLowPolarity rst_n) enableGen

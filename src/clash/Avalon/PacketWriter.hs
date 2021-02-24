@@ -1,5 +1,5 @@
 {-
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,15 @@ fifoOtherInfoReg :: Unsigned 3
 fifoOtherInfoReg = 0x4
 
 {-
+ - The AvalonMasterOp for an Intel FPGA Avalon FIFO Memory Core as output.
+ -}
+type PacketWriterOp dom = AvalonMasterOp dom () 3 32
+
+type PacketWriterExtInput dom = AvalonMasterExtInput dom 32
+
+type PacketWriterExtOutput dom = AvalonMasterExtOutput dom 3 32
+
+{-
  - Write packets to an Intel FPGA Avalon FIFO Memory Core.
  -
  - Data on `pIn` is pushed onto the FIFO. `pIn` is in the same format as the
@@ -68,18 +77,7 @@ packetWriter
        -- ^ Avalon op ready
     -> ( "pInReady" ::: Signal dom Bool
        -- ^ Packet in ready
-       , "op" :::
-           ( "opValid" ::: Signal dom Bool
-           -- ^ Avalon op valid
-           , "opCmd" ::: Signal dom AvalonCmd
-           -- ^ Avalon op command
-           , "opTag" ::: Signal dom ()
-           -- ^ Avalon op tag
-           , "opAddr" ::: Signal dom (Unsigned 3)
-           -- ^ Avalon op address
-           , "opData" ::: Signal dom (Unsigned 32)
-           -- ^ Avalon op data
-           )
+       , "op" ::: PacketWriterOp dom
        )
 
 packetWriter pIn opReady = (pInReady, op)
