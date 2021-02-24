@@ -6,7 +6,7 @@
  - the HPS, it can be verified that reading the fill_level register works as
  - the value on the LEDs increases.
  -
- - Copyright (c) 2019, 2020 QBayLogic B.V.
+ - Copyright (c) 2019-2021 QBayLogic B.V.
  - All rights reserved.
  -
  - Redistribution and use in source and binary forms, with or without
@@ -200,7 +200,6 @@ ledFillLevel
 ledFillLevel opReady res = (leds, resReady, op)
     where
         op = (pure True, pure AvalonRead, pure (), pure 0, pure undefined)
-        opValid = pure True
         resReady = pure True
         (_, _, resData) = res
         leds = truncateB <$> resData
